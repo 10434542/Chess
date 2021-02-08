@@ -1,0 +1,20 @@
+# IntelliJ
+*.iml
+.idea/
+/out/
+
+# Gradle Related Files
+gradlew
+gradlew.bat
+settings.gradle
+gradle/
+build/
+.gradle/
+
+# Java
+*.class
+
+# Package Files
+*.jar
+*.war
+*.ear
