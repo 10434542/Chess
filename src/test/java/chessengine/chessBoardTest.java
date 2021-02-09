@@ -1,5 +1,6 @@
 package chessengine;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -13,13 +14,13 @@ class chessBoardTest {
         String files = "ABCDEFGH";
 
         if (color == PlayerColor.BLACK) {
-            pawnSquares = files.codePoints().mapToObj(c -> String.valueOf((char) c)).map(i -> currentBoard.getSquareAt(i, 6)).collect(Collectors.toList());
-            otherPieces = files.codePoints().mapToObj(c -> String.valueOf((char) c)).map(i -> currentBoard.getSquareAt(i, 7)).collect(Collectors.toList());
+            pawnSquares = files.codePoints().mapToObj(c -> String.valueOf((char) c)).map(i -> currentBoard.getSquareAt(i, 7)).collect(Collectors.toList());
+            otherPieces = files.codePoints().mapToObj(c -> String.valueOf((char) c)).map(i -> currentBoard.getSquareAt(i, 8)).collect(Collectors.toList());
 
         }
         else {
-            pawnSquares = files.codePoints().mapToObj(c -> String.valueOf((char) c)).map(i -> currentBoard.getSquareAt(i, 1)).collect(Collectors.toList());
-            otherPieces = files.codePoints().mapToObj(c -> String.valueOf((char) c)).map(i -> currentBoard.getSquareAt(i, 0)).collect(Collectors.toList());
+            pawnSquares = files.codePoints().mapToObj(c -> String.valueOf((char) c)).map(i -> currentBoard.getSquareAt(i, 2)).collect(Collectors.toList());
+            otherPieces = files.codePoints().mapToObj(c -> String.valueOf((char) c)).map(i -> currentBoard.getSquareAt(i, 1)).collect(Collectors.toList());
         }
         Assertions.assertAll(
                 () -> Assertions.assertTrue(pawnSquares.get(0).getCurrentPiece() instanceof Pawn && pawnSquares.get(0).getCurrentPiece().getColor() == color),
@@ -57,13 +58,40 @@ class chessBoardTest {
     }
 
     @Test
-    void boardShouldStartWithPiecesPresent() {
-        ChessBoard chessBoard = new ChessBoard();
+    void addPieceToSquare() {
+        ChessBoard chessBoard = new ChessBoard().addAPiece(new ImmutablePair<>("A1", new Pawn(PlayerColor.WHITE)));
+        Assertions.assertAll(
+                () -> Assertions.assertNotNull(chessBoard.getSquareAt("A", 1).getCurrentPiece()),
+                () -> Assertions.assertTrue(chessBoard.getSquareAt("A", 1).getCurrentPiece() instanceof Pawn));
+    }
+
+    @Test
+    void boardCanBeBuildWithAllPiecesPresent() {
+        ChessBoard chessBoard = new ChessBoard().addAllPieces();
         assertPiecesPresentOnStandardBoard(PlayerColor.WHITE, chessBoard);
         assertPiecesPresentOnStandardBoard(PlayerColor.BLACK, chessBoard);
         chessBoard.getSquareAt("A", 1);
         System.out.println(chessBoard.getSquareAt("A", 1).getCurrentPiece());
     }
 
+    @Test
+    void createBoardWithListOfTuples() {
+        List<ImmutablePair<String, Piece>> piecesInitializeWith = List.
+                of(new ImmutablePair<>("A1", new Pawn(PlayerColor.BLACK)), new ImmutablePair<>("A2", new Pawn(PlayerColor.BLACK)),
+                        new ImmutablePair<>("C4", new Queen(PlayerColor.WHITE)));
+        ChessBoard chessBoard = new ChessBoard(piecesInitializeWith);
+        Assertions.assertAll(
+                () -> Assertions.assertTrue(chessBoard.getSquareAt("A", 1).getCurrentPiece() instanceof Pawn),
+                () -> Assertions.assertTrue(chessBoard.getSquareAt("A", 2).getCurrentPiece() instanceof Pawn),
+                () -> Assertions.assertTrue(chessBoard.getSquareAt("C", 4).getCurrentPiece() instanceof Queen));
+    }
 
+    @Test
+    void removePieceFromBoard() {
+        List<ImmutablePair<String, Piece>> piecesInitializeWith = List.
+                of(new ImmutablePair<>("A1", new Pawn(PlayerColor.BLACK)), new ImmutablePair<>("A2", new Pawn(PlayerColor.BLACK)),
+                        new ImmutablePair<>("C4", new Queen(PlayerColor.WHITE)));
+        ChessBoard chessBoard = new ChessBoard(piecesInitializeWith);
+        chessBoard.removePiece("A1");
+    }
 }

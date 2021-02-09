@@ -12,6 +12,7 @@ public class ChessBoard {
 
     public ChessBoard(List<ImmutablePair<String, Piece>> squaresAndPieces) {
         assembleBoard();
+        addPiecesFromPairs(squaresAndPieces);
     }
     public ChessBoard() {
         assembleBoard();
@@ -30,23 +31,46 @@ public class ChessBoard {
     }
     public ChessBoard addAllPieces() {
         this.allFiles.keySet().stream()
-                .map(i -> this.getSquareAt(i, 1))
+                .map(i -> this.getSquareAt(i, 2))
                 .collect(Collectors.toList())
                 .forEach(x -> x.setCurrentPiece(new Pawn(PlayerColor.WHITE)));
         this.allFiles.keySet().stream()
-                .map(i -> this.getSquareAt(i, 6))
+                .map(i -> this.getSquareAt(i, 7))
                 .collect(Collectors.toList())
                 .forEach(x -> x.setCurrentPiece(new Pawn(PlayerColor.BLACK)));
+
+        this.allFiles.get("A").get(1).setCurrentPiece(new Rook(PlayerColor.WHITE));
+        this.allFiles.get("B").get(1).setCurrentPiece(new Knight(PlayerColor.WHITE));
+        this.allFiles.get("C").get(1).setCurrentPiece(new Bishop(PlayerColor.WHITE));
+        this.allFiles.get("D").get(1).setCurrentPiece(new Queen(PlayerColor.WHITE));
+        this.allFiles.get("E").get(1).setCurrentPiece(new King(PlayerColor.WHITE));
+        this.allFiles.get("F").get(1).setCurrentPiece(new Bishop(PlayerColor.WHITE));
+        this.allFiles.get("G").get(1).setCurrentPiece(new Knight(PlayerColor.WHITE));
+        this.allFiles.get("H").get(1).setCurrentPiece(new Rook(PlayerColor.WHITE));
+
+        this.allFiles.get("A").get(8).setCurrentPiece(new Rook(PlayerColor.BLACK));
+        this.allFiles.get("B").get(8).setCurrentPiece(new Knight(PlayerColor.BLACK));
+        this.allFiles.get("C").get(8).setCurrentPiece(new Bishop(PlayerColor.BLACK));
+        this.allFiles.get("D").get(8).setCurrentPiece(new Queen(PlayerColor.BLACK));
+        this.allFiles.get("E").get(8).setCurrentPiece(new King(PlayerColor.BLACK));
+        this.allFiles.get("F").get(8).setCurrentPiece(new Bishop(PlayerColor.BLACK));
+        this.allFiles.get("G").get(8).setCurrentPiece(new Knight(PlayerColor.BLACK));
+        this.allFiles.get("H").get(8).setCurrentPiece(new Rook(PlayerColor.BLACK));
+
         return this;
     }
 
     public ChessBoard addAPiece(ImmutablePair<String, Piece> squareAndPiece) {
-        Square toPlacePieceAt = this.getSquareAt(squareAndPiece.left.substring(0,1), Integer.parseInt(squareAndPiece.left.substring(1)));
-        toPlacePieceAt.setCurrentPiece(squareAndPiece.right);
+        Square toPlacePieceAt = this.getSquareAt(squareAndPiece.getLeft().substring(0,1), Integer.parseInt(squareAndPiece.getLeft().substring(1)));
+        toPlacePieceAt.setCurrentPiece(squareAndPiece.getRight());
         return this;
     }
+//    public ChessBoard addMultiplePieces(List<ImmutablePair<String, Piece>> piecesToAdd) {}
 
-    public ChessBoard addPieces(List<ImmutablePair<String, ? extends Piece>> squaresAndPieces) {
+    public ChessBoard addPiecesFromPairs(List<ImmutablePair<String, Piece>> piecesToAdd) {
+        for (ImmutablePair<String, Piece> pair : piecesToAdd) {
+            this.getSquareAt(pair.getLeft().substring(0,1), Integer.parseInt(pair.getLeft().substring(1))).setCurrentPiece(pair.getRight());
+        }
         return this;
     }
 

@@ -22,7 +22,8 @@ class chessGameTest {
 
     @Test
     void getNextPlayer() {
-        ChessGame chessGame = new ChessGame();
+        ChessBoard chessBoard = new ChessBoard().addAllPieces();
+        ChessGame chessGame = new ChessGame(chessBoard);
         chessGame.addMove("A2", "A3");
         PlayerColor black = chessGame.getCurrentPlayerColor();
         Assertions.assertEquals(PlayerColor.BLACK, black, "After white has made a move, it should be black's turn");
@@ -30,9 +31,10 @@ class chessGameTest {
 
     @Test
     void updateMoveHistory() {
-        ChessGame chessGame = new ChessGame();
+        ChessBoard chessBoard = new ChessBoard().addAllPieces();
+        ChessGame chessGame = new ChessGame(chessBoard);
         chessGame.addMove("A2", "A3");
-        List<String> lastMove = chessGame.getMoveHistory();
+        List<Move> lastMove = chessGame.getMoveHistory();
         List<String> expected = Arrays.asList("A1", "A2");
         Assertions.assertEquals(expected, lastMove, "When a move is made, the move history should be updated");
     }
