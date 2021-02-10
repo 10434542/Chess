@@ -36,7 +36,14 @@ class chessGameTest {
         chessGame.addMove("A2", "A3");
         List<Move> lastMove = chessGame.getMoveHistory();
         List<String> expected = Arrays.asList("A1", "A2");
+        Move a1ToA2 = new Move("A1", "A2");
         Assertions.assertEquals(expected, lastMove, "When a move is made, the move history should be updated");
+    }
+
+    @Test
+    void pawnCanMoveTwoSpots() {
+        ChessBoard chessBoard = new ChessBoard().addAllPieces();
+        ChessGame chessGame = new ChessGame(chessBoard);
     }
 
 

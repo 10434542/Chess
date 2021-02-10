@@ -87,11 +87,31 @@ class chessBoardTest {
     }
 
     @Test
-    void removePieceFromBoard() {
+    void removePiecesFromBoard() {
         List<ImmutablePair<String, Piece>> piecesInitializeWith = List.
                 of(new ImmutablePair<>("A1", new Pawn(PlayerColor.BLACK)), new ImmutablePair<>("A2", new Pawn(PlayerColor.BLACK)),
                         new ImmutablePair<>("C4", new Queen(PlayerColor.WHITE)));
         ChessBoard chessBoard = new ChessBoard(piecesInitializeWith);
-        chessBoard.removePiece("A1");
+        Piece aPawn = chessBoard.removePiece("A1");
+        Piece anotherPawn = chessBoard.removePiece("A2");
+        Piece aQueen = chessBoard.removePiece("C4");
+        Assertions.assertAll(
+                () -> Assertions.assertNull(chessBoard.getSquareAt("A", 1).getCurrentPiece()),
+                () -> Assertions.assertNull(chessBoard.getSquareAt("A", 2).getCurrentPiece()),
+                () -> Assertions.assertNull(chessBoard.getSquareAt("A", 3).getCurrentPiece()),
+                () -> Assertions.assertTrue(aPawn instanceof Pawn),
+                () -> Assertions.assertTrue(anotherPawn instanceof Pawn),
+                () -> Assertions.assertTrue(aQueen instanceof Queen)
+        );
+    }
+
+    @Test
+    void movePawnOnePlace() {
+        ChessBoard chessBoard = new ChessBoard().addAllPieces();
+//        chessBoard.getSquareAt("A", 1);
+        chessBoard.move("A2", "A3");
+        Piece pawn = chessBoard.getSquareAt("A", 3).getCurrentPiece();
+        Assertions.assertTrue(pawn instanceof Pawn);
+
     }
 }

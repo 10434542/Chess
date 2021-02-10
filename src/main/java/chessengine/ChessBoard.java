@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.jetbrains.annotations.NotNull;
 
 public class ChessBoard {
 
@@ -65,8 +66,8 @@ public class ChessBoard {
         toPlacePieceAt.setCurrentPiece(squareAndPiece.getRight());
         return this;
     }
-//    public ChessBoard addMultiplePieces(List<ImmutablePair<String, Piece>> piecesToAdd) {}
 
+    @NotNull
     public ChessBoard addPiecesFromPairs(List<ImmutablePair<String, Piece>> piecesToAdd) {
         for (ImmutablePair<String, Piece> pair : piecesToAdd) {
             this.getSquareAt(pair.getLeft().substring(0,1), Integer.parseInt(pair.getLeft().substring(1))).setCurrentPiece(pair.getRight());
@@ -74,7 +75,20 @@ public class ChessBoard {
         return this;
     }
 
+    @NotNull
     public Square getSquareAt(String a, int i) {
         return allFiles.get(a).get(i);
+    }
+
+    @NotNull
+    public Piece removePiece(String a1) {
+        Square square = this.getSquareAt(a1.substring(0,1), Integer.parseInt(a1.substring(1)));
+        Piece piece = square.getCurrentPiece();
+        square.removePiece();
+        return piece;
+    }
+
+    public void move(String origin, String destination) {
+
     }
 }

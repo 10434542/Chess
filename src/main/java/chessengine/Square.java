@@ -11,4 +11,8 @@ public class Square {
     public void setCurrentPiece(Piece piece) {
         this.currentPiece = piece;
     }
+
+    public void removePiece() {
+        this.currentPiece = null;
+    }
 }
