@@ -3,10 +3,14 @@ package chessengine;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+
 
 class chessBoardTest {
     private void assertPiecesPresentOnStandardBoard(PlayerColor color, ChessBoard currentBoard) {
@@ -106,12 +110,33 @@ class chessBoardTest {
     }
 
     @Test
-    void movePawnOnePlace() {
+    void movePawnOnePlace() throws IllegalMoveException {
         ChessBoard chessBoard = new ChessBoard().addAllPieces();
 //        chessBoard.getSquareAt("A", 1);
         chessBoard.move("A2", "A3");
         Piece pawn = chessBoard.getSquareAt("A", 3).getCurrentPiece();
         Assertions.assertTrue(pawn instanceof Pawn);
+    }
 
+    // TODO: parameterize this test
+    @ParameterizedTest
+    @CsvSource({
+            "A2, A5",
+            "A2, A6",
+            "A2, A7",
+            "A2, A8",
+
+    })
+    void illegalWhitePawnMoves(String initialSquare, String endingSquare) {
+        ChessBoard chessBoard = new ChessBoard(List.of(new ImmutablePair<>(initialSquare, new Pawn(PlayerColor.WHITE))));
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move(initialSquare, endingSquare));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+
+    })
+    void legalPawnMoves(String initialSquare, String endingSquare) {
+        ChessBoard chessBoard = new ChessBoard().addAllPieces();
     }
 }

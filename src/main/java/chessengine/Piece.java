@@ -9,4 +9,6 @@ public abstract class Piece {
     public PlayerColor getColor() {
         return this.color;
     }
+
+    public abstract boolean validateMove(String origin, String destination);
 }

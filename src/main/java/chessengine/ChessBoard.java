@@ -80,6 +80,12 @@ public class ChessBoard {
         return allFiles.get(a).get(i);
     }
 
+    public Square getSquareAt(String square) {
+        String file = square.substring(0,1);
+        Integer rank = Integer.parseInt(square.substring(1));
+        return this.allFiles.get(file).get(rank);
+    }
+
     @NotNull
     public Piece removePiece(String a1) {
         Square square = this.getSquareAt(a1.substring(0,1), Integer.parseInt(a1.substring(1)));
@@ -88,7 +94,16 @@ public class ChessBoard {
         return piece;
     }
 
-    public void move(String origin, String destination) {
-
+    public void move(String origin, String destination) throws IllegalMoveException {
+        Piece piece = getSquareAt(origin).getCurrentPiece();
+        if (!(piece.validateMove(origin, destination))) {
+            StringBuilder errorMessage = new StringBuilder(piece.getClass()
+                    .toString())
+                    .append(origin)
+                    .append(" ")
+                    .append(destination);
+            throw new IllegalMoveException(errorMessage.toString());
+        };
+        getSquareAt(destination).setCurrentPiece(piece);
     }
 }
