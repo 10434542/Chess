@@ -125,18 +125,24 @@ class chessBoardTest {
             "A2, A6",
             "A2, A7",
             "A2, A8",
+            "A2, A1",
+            "A2, B2",
+            "B2, A2"
 
     })
     void illegalWhitePawnMoves(String initialSquare, String endingSquare) {
-        ChessBoard chessBoard = new ChessBoard(List.of(new ImmutablePair<>(initialSquare, new Pawn(PlayerColor.WHITE))));
+        ImmutablePair testPair = new ImmutablePair(initialSquare, new Pawn(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(testPair));
         Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move(initialSquare, endingSquare));
     }
 
     @ParameterizedTest
     @CsvSource({
-
+        "A7, A"
     })
-    void legalPawnMoves(String initialSquare, String endingSquare) {
-        ChessBoard chessBoard = new ChessBoard().addAllPieces();
+    void illegalBlackPawnMoves(String initialSquare, String endingSquare) {
+        ImmutablePair testPair = new ImmutablePair(initialSquare, new Pawn(PlayerColor.BLACK));
+        ChessBoard chessBoard = new ChessBoard(List.of(testPair));
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move(initialSquare, endingSquare));
     }
 }

@@ -8,7 +8,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.jetbrains.annotations.NotNull;
 
 public class ChessBoard {
-
+    private List<String> fileNames = List.of("A", "B", "C", "D", "E", "F", "G", "H");
     private Map<String, Map<Integer, Square>> allFiles;
 
     public ChessBoard(List<ImmutablePair<String, Piece>> squaresAndPieces) {
@@ -21,15 +21,16 @@ public class ChessBoard {
 
     private void assembleBoard() {
         this.allFiles = new HashMap<>();
-        for (int j = 65; j < 73; j++) {
-            String currentKey = Character.toString((char) j);
-            allFiles.put(currentKey, new HashMap<>());
+        for (String fileName : fileNames) {
+
+            allFiles.put(fileName, new HashMap<>());
             for (int i = 1; i < 9; i++) {
                 Square square = new Square();
-                allFiles.get(currentKey).put(i, square);
+                allFiles.get(fileName).put(i, square);
             }
         }
     }
+
     public ChessBoard addAllPieces() {
         this.allFiles.keySet().stream()
                 .map(i -> this.getSquareAt(i, 2))
@@ -96,7 +97,14 @@ public class ChessBoard {
 
     public void move(String origin, String destination) throws IllegalMoveException {
         Piece piece = getSquareAt(origin).getCurrentPiece();
-        if (!(piece.validateMove(origin, destination))) {
+
+        int xOrigin = fileNames.indexOf(origin.substring(0,1));
+        int yOrigin = Integer.parseInt(origin.substring(1));
+        int xDestination = fileNames.indexOf(destination.substring(0,1));
+        int yDestination = Integer.parseInt(destination.substring(1));
+        int deltaX = xDestination - xOrigin;
+        int deltaY = yDestination - yOrigin;
+        if (!(piece.validateMove(deltaX, deltaY))) {
             StringBuilder errorMessage = new StringBuilder(piece.getClass()
                     .toString())
                     .append(origin)

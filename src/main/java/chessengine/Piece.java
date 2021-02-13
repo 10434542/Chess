@@ -10,5 +10,5 @@ public abstract class Piece {
         return this.color;
     }
 
-    public abstract boolean validateMove(String origin, String destination);
+    public abstract boolean validateMove(int deltaX, int deltaY);
 }

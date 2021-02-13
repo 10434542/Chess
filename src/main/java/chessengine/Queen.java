@@ -7,7 +7,7 @@ public class Queen extends Piece{
     }
 
     @Override
-    public boolean validateMove(String origin, String destination) {
+    public boolean validateMove(int deltaX, int deltaY) {
         return false;
     }
 }
