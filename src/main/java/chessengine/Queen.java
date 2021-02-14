@@ -1,5 +1,7 @@
 package chessengine;
 
+import java.util.List;
+
 public class Queen extends Piece{
 
     protected Queen(PlayerColor color) {
@@ -7,7 +9,12 @@ public class Queen extends Piece{
     }
 
     @Override
-    public boolean validateMove(int deltaX, int deltaY) {
+    public boolean validateMove(Square startingSquare, Square endingSquare) {
         return false;
+    }
+
+    @Override
+    public List<Square> getAttackingSquares(Square currentSquare) {
+        return null;
     }
 }

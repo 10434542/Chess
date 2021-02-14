@@ -40,12 +40,6 @@ class chessGameTest {
         Assertions.assertEquals(expected, lastMove, "When a move is made, the move history should be updated");
     }
 
-    @Test
-    void pawnCanMoveTwoSpots() {
-        ChessBoard chessBoard = new ChessBoard().addAllPieces();
-        ChessGame chessGame = new ChessGame(chessBoard);
-    }
-
 
 
 //    @Test not like this

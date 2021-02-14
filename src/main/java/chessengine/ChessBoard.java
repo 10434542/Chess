@@ -8,7 +8,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.jetbrains.annotations.NotNull;
 
 public class ChessBoard {
-    private List<String> fileNames = List.of("A", "B", "C", "D", "E", "F", "G", "H");
+    private final List<String> fileNames = List.of("A", "B", "C", "D", "E", "F", "G", "H");
     private Map<String, Map<Integer, Square>> allFiles;
 
     public ChessBoard(List<ImmutablePair<String, Piece>> squaresAndPieces) {
@@ -21,12 +21,11 @@ public class ChessBoard {
 
     private void assembleBoard() {
         this.allFiles = new HashMap<>();
-        for (String fileName : fileNames) {
-
-            allFiles.put(fileName, new HashMap<>());
-            for (int i = 1; i < 9; i++) {
-                Square square = new Square();
-                allFiles.get(fileName).put(i, square);
+        for (int x = 1; x < fileNames.size()+1; x++) {
+            allFiles.put(fileNames.get(x-1), new HashMap<>());
+            for (int y = 1; y < 9; y++) {
+                Square square = new Square(x,y);
+                allFiles.get(fileNames.get(x-1)).put(y, square);
             }
         }
     }
@@ -71,7 +70,7 @@ public class ChessBoard {
     @NotNull
     public ChessBoard addPiecesFromPairs(List<ImmutablePair<String, Piece>> piecesToAdd) {
         for (ImmutablePair<String, Piece> pair : piecesToAdd) {
-            this.getSquareAt(pair.getLeft().substring(0,1), Integer.parseInt(pair.getLeft().substring(1))).setCurrentPiece(pair.getRight());
+            this.getSquareAt(pair.getLeft()).setCurrentPiece(pair.getRight());
         }
         return this;
     }
@@ -81,10 +80,14 @@ public class ChessBoard {
         return allFiles.get(a).get(i);
     }
 
-    public Square getSquareAt(String square) {
-        String file = square.substring(0,1);
-        Integer rank = Integer.parseInt(square.substring(1));
+    public Square getSquareAt(String squareName) {
+        String file = squareName.substring(0,1);
+        Integer rank = Integer.parseInt(squareName.substring(1));
         return this.allFiles.get(file).get(rank);
+    }
+
+    public Square getSquareAt(int x, int y) {
+        return this.allFiles.get(fileNames.get(x)).get(y);
     }
 
     @NotNull
@@ -98,20 +101,15 @@ public class ChessBoard {
     public void move(String origin, String destination) throws IllegalMoveException {
         Piece piece = getSquareAt(origin).getCurrentPiece();
 
-        int xOrigin = fileNames.indexOf(origin.substring(0,1));
-        int yOrigin = Integer.parseInt(origin.substring(1));
-        int xDestination = fileNames.indexOf(destination.substring(0,1));
-        int yDestination = Integer.parseInt(destination.substring(1));
-        int deltaX = xDestination - xOrigin;
-        int deltaY = yDestination - yOrigin;
-        if (!(piece.validateMove(deltaX, deltaY))) {
-            StringBuilder errorMessage = new StringBuilder(piece.getClass()
-                    .toString())
-                    .append(origin)
-                    .append(" ")
-                    .append(destination);
-            throw new IllegalMoveException(errorMessage.toString());
-        };
+        if (!(piece.validateMove(getSquareAt(origin), getSquareAt(destination)))) {
+            String errorMessage = piece.getClass()
+                    .toString() +
+                    " " +
+                    origin +
+                    " " +
+                    destination;
+            throw new IllegalMoveException(errorMessage);
+        }
         getSquareAt(destination).setCurrentPiece(piece);
     }
 }
