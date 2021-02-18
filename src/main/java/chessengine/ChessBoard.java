@@ -87,7 +87,7 @@ public class ChessBoard {
     }
 
     public Square getSquareAt(int x, int y) {
-        return this.allFiles.get(fileNames.get(x)).get(y);
+        return this.allFiles.get(fileNames.get(x-1)).get(y);
     }
 
     @NotNull
@@ -98,10 +98,17 @@ public class ChessBoard {
         return piece;
     }
 
-    public void move(String origin, String destination) throws IllegalMoveException {
+    public Move move(String origin, String destination) throws IllegalMoveException {
         Piece piece = getSquareAt(origin).getCurrentPiece();
+        Square currentSquare = getSquareAt(origin);
+        Square destinationSquare = getSquareAt(destination);
+        List<Square> legalMoves = piece.getPossibleMoves(this, currentSquare.getPositionX(), currentSquare.getPositionY());
 
-        if (!(piece.validateMove(getSquareAt(origin), getSquareAt(destination)))) {
+        if (legalMoves.contains(destinationSquare)) {
+            getSquareAt(destination).setCurrentPiece(piece);
+            return new Move(origin, destination);
+        }
+        else {
             String errorMessage = piece.getClass()
                     .toString() +
                     " " +
@@ -110,6 +117,5 @@ public class ChessBoard {
                     destination;
             throw new IllegalMoveException(errorMessage);
         }
-        getSquareAt(destination).setCurrentPiece(piece);
     }
 }

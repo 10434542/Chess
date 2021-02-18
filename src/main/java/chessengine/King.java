@@ -1,5 +1,7 @@
 package chessengine;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.List;
 
 public class King extends Piece {
@@ -8,13 +10,15 @@ public class King extends Piece {
         super(color);
     }
 
+
     @Override
-    public boolean validateMove(Square startingSquare, Square endingSquare) {
-        return false;
+    public List<Square> getPossibleMoves(ChessBoard chessBoard, int xStart, int yStart) {
+        return null;
     }
 
     @Override
-    public List<Square> getAttackingSquares(Square currentSquare) {
+    protected List<List<Pair<Integer, Integer>>> getDirections(int xStart, int yStart) {
         return null;
     }
+
 }
