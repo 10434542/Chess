@@ -19,8 +19,8 @@ public class Bishop extends Piece{
         List<Pair<Integer, Integer>> downLeft = new ArrayList<>();
         List<Pair<Integer, Integer>> downRight = new ArrayList<>();
 
-        int shortestDistanceUpRight = Math.min(8 - x, 9 - y);
-        int shortestDistanceDownRight = Math.min(8 - x, y);
+        int shortestDistanceUpRight = Math.min(9 - x, 9 - y);
+        int shortestDistanceDownRight = Math.min(9 - x, y);
         int shortestDistanceUpLeft = Math.min(x, 9 - y);
         int shortestDistanceDownLeft = Math.min(x, y);
 

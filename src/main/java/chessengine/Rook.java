@@ -18,16 +18,16 @@ public class Rook extends Piece {
         List<Pair<Integer, Integer>> down = new ArrayList<>();
         List<Pair<Integer, Integer>> left = new ArrayList<>();
         List<Pair<Integer, Integer>> right = new ArrayList<>();
-        for (int i = x; i < 9; i++) {
+        for (int i = x+1; i < 9; i++) {
             right.add(new MutablePair<>(i, y));
         }
-        for (int i = x; i > 0 ; i--) {
+        for (int i = x-1; i > 0 ; i--) {
             left.add(new MutablePair<>(i, y));
         }
-        for (int i = y; i < 9; i++) {
+        for (int i = y+1; i < 9; i++) {
             up.add(new MutablePair<>(x, i));
         }
-        for (int i = x; i > 0; i--) {
+        for (int i = x-1; i > 0; i--) {
             down.add(new MutablePair<>(x, i));
         }
         return List.of(up, down, left, right);

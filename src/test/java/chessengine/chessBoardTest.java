@@ -182,9 +182,16 @@ class chessBoardTest {
                 () -> Assertions.assertTrue(chessBoard.getSquareAt("A6").getCurrentPiece() instanceof Pawn));
     }
 
+    //</editor-fold>
+
+    //<editor-fold desc="En passant tests">
     //TODO en passant capture/attack.
+    @Test
+    void pawnCanTakeEnPassant() {
+        List<ImmutablePair<String, Piece>> pieces = List.of(new ImmutablePair<>("A"))
+        ChessBoard chessBoard = new ChessBoard();
 
-
+    }
     //</editor-fold>
 
     //<editor-fold desc="Bishop tests">
@@ -245,6 +252,171 @@ class chessBoardTest {
                 () -> Assertions.assertThrows(IllegalMoveException.class, () -> chessBoardWhite.move(initialSquare, destinationSquare)));
 
     }
+
+    @ParameterizedTest
+    @CsvSource({
+            "D4, F6",
+            "D4, B6",
+            "D4, F2",
+            "D4, B2",
+            "D4, E5",
+            "D4, C5"
+    })
+    void bishopCanTakePieces(String initialSquare, String destinationSquare) throws IllegalMoveException {
+        List<ImmutablePair<String, Piece>> pieces = List.of(
+                new ImmutablePair<>(initialSquare, new Bishop(PlayerColor.BLACK)),
+                new ImmutablePair<>(destinationSquare, new Queen(PlayerColor.WHITE)));
+        ChessBoard chessBoard = new ChessBoard(pieces);
+        chessBoard.move(initialSquare, destinationSquare);
+        Assertions.assertTrue(chessBoard.getSquareAt(destinationSquare).getCurrentPiece() instanceof Bishop);
+    }
     //</editor-fold>
 
+    //<editor-fold desc="Rook tests">
+
+    @ParameterizedTest
+    @CsvSource({
+            "D4, C5",
+            "D4, C3",
+            "D4, E5",
+            "D4, E3"
+    })
+    void illegalRookMoves(String initialSquare, String destinationSquare) {
+        ImmutablePair<String, Piece> testPair = new ImmutablePair<>(initialSquare, new Rook(PlayerColor.BLACK));
+        ChessBoard chessBoard = new ChessBoard(List.of(testPair));
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move(initialSquare, destinationSquare));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "D4, C4, B4",
+            "D4, D5, D6",
+            "D4, E4, F6",
+            "D4, D3, D2"
+    })
+    void rookCantMoveThroughPieces(String initialSquare, String obstructingSquare, String destinationSquare) {
+        List<ImmutablePair<String, Piece>> blackPieces = List.of(
+                new ImmutablePair<>(initialSquare, new Rook(PlayerColor.BLACK)),
+                new ImmutablePair<>(obstructingSquare, new Pawn(PlayerColor.BLACK)));
+        List<ImmutablePair<String, Piece>> blackAndWhitePieces = List.of(
+                new ImmutablePair<>(initialSquare, new Rook(PlayerColor.BLACK)),
+                new ImmutablePair<>(obstructingSquare, new Pawn(PlayerColor.WHITE)));
+        ChessBoard chessBoardBlack = new ChessBoard(blackPieces);
+        ChessBoard chessBoardWhite = new ChessBoard(blackAndWhitePieces);
+        Assertions.assertAll(
+                () -> Assertions.assertThrows(IllegalMoveException.class, () -> chessBoardBlack.move(initialSquare, destinationSquare)),
+                () -> Assertions.assertThrows(IllegalMoveException.class, () -> chessBoardWhite.move(initialSquare, destinationSquare)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "D4, C4",
+            "D4, D5",
+            "D4, E4",
+            "D4, D3"
+
+    })
+    void rookCantTakePieceOfIdenticalColor(String initialSquare, String destinationSquare) {
+        List<ImmutablePair<String, Piece>> blackPieces = List.of(
+                new ImmutablePair<>(initialSquare, new Rook(PlayerColor.BLACK)),
+                new ImmutablePair<>(destinationSquare, new Pawn(PlayerColor.BLACK)));
+        List<ImmutablePair<String, Piece>> whitePieces = List.of(
+                new ImmutablePair<>(initialSquare, new Rook(PlayerColor.WHITE)),
+                new ImmutablePair<>(destinationSquare, new Pawn(PlayerColor.WHITE)));
+        ChessBoard chessBoardBlack = new ChessBoard(blackPieces);
+        ChessBoard chessBoardWhite = new ChessBoard(whitePieces);
+        Assertions.assertAll(
+                () -> Assertions.assertThrows(IllegalMoveException.class, () -> chessBoardBlack.move(initialSquare, destinationSquare)),
+                () -> Assertions.assertThrows(IllegalMoveException.class, () -> chessBoardWhite.move(initialSquare, destinationSquare)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "D4, C4",
+            "D4, D5",
+            "D4, E4",
+            "D4, D3"
+
+    })
+    void rookCanTakePieces(String initialSquare, String destinationSquare) {
+        List<ImmutablePair<String, Piece>> blackAndWhitePieces = List.of(
+                new ImmutablePair<>(initialSquare, new Rook(PlayerColor.BLACK)),
+                new ImmutablePair<>(destinationSquare, new Pawn(PlayerColor.WHITE)));
+        ChessBoard chessBoard = new ChessBoard(blackAndWhitePieces);
+        Assertions.assertDoesNotThrow(()-> chessBoard.move(initialSquare, destinationSquare));
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Knight tests">
+
+    @ParameterizedTest
+    @CsvSource({
+            "D4, E5",
+            "D4, E4",
+            "D4, E3",
+            "D4, D5",
+            "D4, D3",
+            "D4, C5",
+            "D4, C4",
+            "D4, C3"
+    })
+    void illegalKnightMoves(String initialSquare, String destinationSquare) {
+        ImmutablePair<String, Piece> testPair = new ImmutablePair<>(initialSquare, new Knight(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(testPair));
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move(initialSquare, destinationSquare));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "D4, C6",
+            "D4, C2",
+            "D4, B5",
+            "D4, B3",
+            "D4, E6",
+            "D4, E2",
+            "D4, F5",
+            "D4, F3"
+    })
+    void legalKnightMoves(String initialSquare, String destinationSquare) {
+        ImmutablePair<String, Piece> testPair = new ImmutablePair<>(initialSquare, new Knight(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(testPair));
+        Assertions.assertDoesNotThrow(() -> chessBoard.move(initialSquare, destinationSquare));
+    }
+
+    @Test
+    void knightCanJumpOverPieces() {
+        ChessBoard chessBoard = new ChessBoard().addAllPieces();
+        Assertions.assertDoesNotThrow(() -> chessBoard.move("B1", "C3"));
+    }
+
+    @Test
+    void knightCanTakePiece() throws IllegalMoveException {
+        ImmutablePair<String, Piece> knight = new ImmutablePair<>("A1", new Knight(PlayerColor.WHITE));
+        ImmutablePair<String, Piece> pawn = new ImmutablePair<>("B3", new Pawn(PlayerColor.BLACK));
+        ChessBoard chessBoard = new ChessBoard(List.of(pawn, knight));
+        chessBoard.move("A1", "B3");
+        Assertions.assertTrue(chessBoard.getSquareAt("B3").getCurrentPiece() instanceof Knight);
+    }
+
+    @Test
+    void knightCantTakePieceOfIdenticalColor() throws IllegalMoveException {
+        ImmutablePair<String, Piece> knight = new ImmutablePair<>("A1", new Knight(PlayerColor.WHITE));
+        ImmutablePair<String, Piece> pawn = new ImmutablePair<>("B3", new Pawn(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(pawn, knight));
+
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move("A1", "B3"));
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Queen tests">
+
+    //TODO add queen tests!
+
+    //</editor-fold>
+
+    //<editor-fold desc="King tests">
+
+    //TODO add King tests (take forks/pins into account)
+
+    //</editor-fold>
 }
