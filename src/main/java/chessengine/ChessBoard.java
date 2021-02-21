@@ -99,16 +99,23 @@ public class ChessBoard {
     }
 
     public Move move(String origin, String destination) throws IllegalMoveException {
+        // TODO: maybe add a last move tuple with destination square AND the piece, to make it easier to handle en passant
         Piece piece = getSquareAt(origin).getCurrentPiece();
         Square currentSquare = getSquareAt(origin);
         Square destinationSquare = getSquareAt(destination);
         List<Square> legalMoves = piece.getPossibleMoves(this, currentSquare.getPositionX(), currentSquare.getPositionY());
 
+        if (piece instanceof Pawn && Math.abs(currentSquare.getPositionY() - destinationSquare.getPositionY()) == 2) {
+            ((Pawn) piece).setEnPassantCapture(true);
+        }
+
         if (legalMoves.contains(destinationSquare)) {
             getSquareAt(destination).setCurrentPiece(piece);
+            getSquareAt(origin).removePiece();
             return new Move(origin, destination);
         }
         else {
+
             String errorMessage = piece.getClass()
                     .toString() +
                     " " +

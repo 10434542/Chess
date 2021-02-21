@@ -187,9 +187,15 @@ class chessBoardTest {
     //<editor-fold desc="En passant tests">
     //TODO en passant capture/attack.
     @Test
-    void pawnCanTakeEnPassant() {
-        List<ImmutablePair<String, Piece>> pieces = List.of(new ImmutablePair<>("A"))
-        ChessBoard chessBoard = new ChessBoard();
+    void pawnCanTakeEnPassant() throws IllegalMoveException {
+        List<ImmutablePair<String, Piece>> pieces = List.of(
+                new ImmutablePair<>("A5", new Pawn(PlayerColor.WHITE)),
+                new ImmutablePair<>("B7", new Pawn(PlayerColor.BLACK)));
+        ChessBoard chessBoard = new ChessBoard(pieces);
+        chessBoard.move("B7","B5");
+        Pawn blackPawn = (Pawn) chessBoard.getSquareAt("B5").getCurrentPiece();
+        System.out.println(blackPawn.getEnPassantCapture());
+        Assertions.assertDoesNotThrow(() -> chessBoard.move("A5", "B6"));
 
     }
     //</editor-fold>

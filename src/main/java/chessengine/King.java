@@ -17,7 +17,7 @@ public class King extends Piece {
     }
 
     @Override
-    protected List<List<Pair<Integer, Integer>>> getDirections(int xStart, int yStart) {
+    public List<List<Pair<Integer, Integer>>> getDirections(int xStart, int yStart) {
         return null;
     }
 

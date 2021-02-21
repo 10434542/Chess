@@ -3,11 +3,12 @@ package chessengine;
 import java.util.Objects;
 
 public class Square {
-    private Piece currentPiece;
 
+    private Piece currentPiece;
     private final int positionX;
     private final int positionY;
     private boolean contested;
+
     public Square(int positionX, int positionY) {
 
         this.positionX = positionX;

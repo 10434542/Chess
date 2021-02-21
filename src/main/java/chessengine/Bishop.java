@@ -11,30 +11,29 @@ public class Bishop extends Piece{
         super(color);
     }
 
-    @Override
-    public List<List<Pair<Integer, Integer>>> getDirections(int x, int y) {
+    public List<List<Pair<Integer, Integer>>> getDirections(int xStart, int yStart) {
 
         List<Pair<Integer, Integer>> upperLeft = new ArrayList<>();
         List<Pair<Integer, Integer>> upperRight = new ArrayList<>();
         List<Pair<Integer, Integer>> downLeft = new ArrayList<>();
         List<Pair<Integer, Integer>> downRight = new ArrayList<>();
 
-        int shortestDistanceUpRight = Math.min(9 - x, 9 - y);
-        int shortestDistanceDownRight = Math.min(9 - x, y);
-        int shortestDistanceUpLeft = Math.min(x, 9 - y);
-        int shortestDistanceDownLeft = Math.min(x, y);
+        int shortestDistanceUpRight = Math.min(9 - xStart, 9 - yStart);
+        int shortestDistanceDownRight = Math.min(9 - xStart, yStart);
+        int shortestDistanceUpLeft = Math.min(xStart, 9 - yStart);
+        int shortestDistanceDownLeft = Math.min(xStart, yStart);
 
         for (int i = 1; i < shortestDistanceUpRight; i++) {
-            upperLeft.add(new MutablePair<>(x+i,y+i));
+            upperLeft.add(new MutablePair<>(xStart +i, yStart +i));
         }
         for (int i = 1; i < shortestDistanceDownRight; i++) {
-            upperRight.add(new MutablePair<>(x+i, y-i));
+            upperRight.add(new MutablePair<>(xStart +i, yStart -i));
         }
         for (int i = 1; i < shortestDistanceDownLeft; i++) {
-            downLeft.add(new MutablePair<>(x-i, y-i));
+            downLeft.add(new MutablePair<>(xStart -i, yStart -i));
         }
         for (int i = 1; i < shortestDistanceUpLeft; i++) {
-            downRight.add(new MutablePair<>(x-i, y+i));
+            downRight.add(new MutablePair<>(xStart -i, yStart +i));
         }
         return List.of(upperLeft,upperRight, downLeft, downRight);
     }

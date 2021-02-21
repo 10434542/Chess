@@ -12,43 +12,10 @@ public class Knight extends Piece{
     protected Knight(PlayerColor color) {
         super(color);
     }
+    
 
-    @Override
-    protected List<List<Pair<Integer, Integer>>> getDirections(int xStart, int yStart) {
+    public List<List<Pair<Integer, Integer>>> getDirections(int xStart, int yStart) {
         List<Pair<Integer, Integer>> coordinates = new ArrayList<>();
-
-//        if (xStart + 1 < 9) {
-//            if (yStart + 2 < 9) {
-//                coordinates.add(new MutablePair<>(xStart+1, yStart+2));
-//            }
-//            if (yStart - 2 > 0) {
-//                coordinates.add(new MutablePair<>(xStart+1, yStart-2));
-//            }
-//        }
-//        if (xStart + 2 < 9) {
-//            if (yStart + 1 < 9) {
-//                coordinates.add(new MutablePair<>(xStart+2, yStart+1));
-//            }
-//            if (yStart - 1 > 0) {
-//                coordinates.add(new MutablePair<>(xStart+2, yStart-1));
-//            }
-//        }
-//        if (xStart - 1 > 0) {
-//            if (yStart + 2 < 9) {
-//                coordinates.add(new MutablePair<>(xStart-1, yStart+2));
-//            }
-//            if (yStart - 2 > 0) {
-//                coordinates.add(new MutablePair<>(xStart-1, yStart-2));
-//            }
-//        }
-//        if (xStart - 2 < 9) {
-//            if (yStart + 1 < 9) {
-//                coordinates.add(new MutablePair<>(xStart-2, yStart+1));
-//            }
-//            if (yStart - 1 > 0) {
-//                coordinates.add(new MutablePair<>(xStart-2, yStart-1));
-//            }
-//        }
         coordinates.add(new MutablePair<>(xStart+1, yStart+2));
         coordinates.add(new MutablePair<>(xStart+1, yStart-2));
         coordinates.add(new MutablePair<>(xStart+2, yStart+1));

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Piece {
+
     protected PlayerColor color;
 
     protected Piece(PlayerColor color) {
@@ -15,7 +16,13 @@ public abstract class Piece {
     public PlayerColor getColor() {
         return this.color;
     }
-    
+
+    public List<Square> getAttackSquares(ChessBoard chessBoard, int xStart, int yStart) {
+        return this.getPossibleMoves(chessBoard, xStart, yStart);
+    }
+
+    public abstract List<List<Pair<Integer, Integer>>> getDirections(int xStart, int yStart);
+
     public List<Square> getPossibleMoves(ChessBoard chessBoard, int xStart, int yStart) {
         List<Square> legalMoves = new ArrayList<>();
         Square currentSquare;
@@ -36,8 +43,6 @@ public abstract class Piece {
             }
         }
         return legalMoves;
+
     }
-
-    protected abstract List<List<Pair<Integer, Integer>>> getDirections(int xStart, int yStart);
-
 }
