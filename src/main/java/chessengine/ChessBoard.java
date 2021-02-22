@@ -4,12 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.jetbrains.annotations.NotNull;
 
 public class ChessBoard {
     private final List<String> fileNames = List.of("A", "B", "C", "D", "E", "F", "G", "H");
     private Map<String, Map<Integer, Square>> allFiles;
+    private Piece lastMovedPiece;
 
     public ChessBoard(List<ImmutablePair<String, Piece>> squaresAndPieces) {
         assembleBoard();
@@ -99,21 +101,50 @@ public class ChessBoard {
     }
 
     public Move move(String origin, String destination) throws IllegalMoveException {
-        // TODO: maybe add a last move tuple with destination square AND the piece, to make it easier to handle en passant
+        // TODO: refactor this shit
         Piece piece = getSquareAt(origin).getCurrentPiece();
         Square currentSquare = getSquareAt(origin);
         Square destinationSquare = getSquareAt(destination);
-        List<Square> legalMoves = piece.getPossibleMoves(this, currentSquare.getPositionX(), currentSquare.getPositionY());
 
+        if (lastMovedPiece != null && lastMovedPiece.getColor() == piece.getColor()) {
+            String errorMessage = "not " + piece.getColor() + "'s "+ "turn to make a move";
+            throw new IllegalMoveException(errorMessage);
+        }
+        List<Square> legalMoves = piece.getPossibleMoves(this, currentSquare.getPositionX(), currentSquare.getPositionY());
+        legalMoves.forEach(x -> System.out.println(this.fileNames.get(x.getPositionX()-1)+" "+ x.getPositionY()));
         if (piece instanceof Pawn && Math.abs(currentSquare.getPositionY() - destinationSquare.getPositionY()) == 2) {
             ((Pawn) piece).setEnPassantCapture(true);
         }
 
         if (legalMoves.contains(destinationSquare)) {
+
             getSquareAt(destination).setCurrentPiece(piece);
-            getSquareAt(origin).removePiece();
+
+            if (lastMovedPiece instanceof Pawn && ((Pawn) lastMovedPiece).getEnPassantCapture()) {
+                ((Pawn) lastMovedPiece).setEnPassantCapture(false);
+            }
+            lastMovedPiece = piece;
             return new Move(origin, destination);
         }
+
+        // for en passant
+        else if (piece instanceof Pawn && lastMovedPiece instanceof Pawn) {
+            int offset = piece.getColor() == PlayerColor.BLACK ? 1: -1;
+            if (currentSquare.getPositionY() == (piece.getColor() == PlayerColor.BLACK? 4 : 5)) { // we know we can cast to pawn else legalMoves would not contain this move.
+                Piece pawnMightBeCaptured = getSquareAt(destinationSquare.getPositionX(), destinationSquare.getPositionY() + offset).getCurrentPiece();
+                if (pawnMightBeCaptured.getColor() != piece.getColor() &&
+                        pawnMightBeCaptured instanceof Pawn &&
+                        ((Pawn) pawnMightBeCaptured).getEnPassantCapture()) {
+                    getSquareAt(destinationSquare.getPositionX(), destinationSquare.getPositionY() + offset).removePiece();
+                }
+            }
+            else {
+                getSquareAt(origin).removePiece();
+            }
+
+            return new Move(origin, destination);
+        }
+
         else {
 
             String errorMessage = piece.getClass()

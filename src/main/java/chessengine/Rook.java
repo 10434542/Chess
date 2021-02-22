@@ -18,7 +18,7 @@ public class Rook extends Piece {
         List<Pair<Integer, Integer>> down = new ArrayList<>();
         List<Pair<Integer, Integer>> left = new ArrayList<>();
         List<Pair<Integer, Integer>> right = new ArrayList<>();
-        for (int i = xStart +1; i < 9; i++) {
+        for (int i = xStart + 1; i < 9; i++) {
             right.add(new MutablePair<>(i, yStart));
         }
         for (int i = xStart -1; i > 0 ; i--) {
@@ -27,7 +27,7 @@ public class Rook extends Piece {
         for (int i = yStart +1; i < 9; i++) {
             up.add(new MutablePair<>(xStart, i));
         }
-        for (int i = xStart -1; i > 0; i--) {
+        for (int i = yStart -1; i > 0; i--) {
             down.add(new MutablePair<>(xStart, i));
         }
         return List.of(up, down, left, right);

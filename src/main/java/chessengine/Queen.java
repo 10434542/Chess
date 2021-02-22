@@ -19,16 +19,16 @@ public class Queen extends Piece{
         List<Pair<Integer, Integer>> down = new ArrayList<>();
         List<Pair<Integer, Integer>> left = new ArrayList<>();
         List<Pair<Integer, Integer>> right = new ArrayList<>();
-        for (int i = xStart; i < 9; i++) {
+        for (int i = xStart +1; i < 9; i++) {
             right.add(new MutablePair<>(i, yStart));
         }
-        for (int i = xStart; i > 0 ; i--) {
+        for (int i = xStart -1; i > 0 ; i--) {
             left.add(new MutablePair<>(i, yStart));
         }
-        for (int i = yStart; i < 9; i++) {
+        for (int i = yStart +1; i < 9; i++) {
             up.add(new MutablePair<>(xStart, i));
         }
-        for (int i = xStart; i > 0; i--) {
+        for (int i = yStart -1; i > 0; i--) {
             down.add(new MutablePair<>(xStart, i));
         }
         List<Pair<Integer, Integer>> upperLeft = new ArrayList<>();
@@ -36,8 +36,8 @@ public class Queen extends Piece{
         List<Pair<Integer, Integer>> downLeft = new ArrayList<>();
         List<Pair<Integer, Integer>> downRight = new ArrayList<>();
 
-        int shortestDistanceUpRight = Math.min(8 - xStart, 9 - yStart);
-        int shortestDistanceDownRight = Math.min(8 - xStart, yStart);
+        int shortestDistanceUpRight = Math.min(9 - xStart, 9 - yStart);
+        int shortestDistanceDownRight = Math.min(9 - xStart, yStart);
         int shortestDistanceUpLeft = Math.min(xStart, 9 - yStart);
         int shortestDistanceDownLeft = Math.min(xStart, yStart);
 

@@ -47,25 +47,6 @@ public class Pawn extends Piece {
                 possibleSquares.add(attackingSquare);
             }
         }
-
-        // TODO: refactor this stuff
-        int rank = this.color == PlayerColor.BLACK? 4 : 5;
-        if (yStart == rank && xStart < 8) {
-            Square rightSquare = chessBoard.getSquareAt(xStart + 1, rank);
-            Piece rightNeighbour = rightSquare.getCurrentPiece();
-            Square destination = chessBoard.getSquareAt(xStart+1,yStart+1);
-            if (rightNeighbour instanceof Pawn && ((Pawn) rightNeighbour).getEnPassantCapture() && !destination.isContested()) {
-                possibleSquares.add(destination);
-            }
-        }
-        if (yStart == rank && xStart > 1) {
-            Square leftSquare = chessBoard.getSquareAt(xStart - 1, rank);
-            Piece leftNeighbour = leftSquare.getCurrentPiece();
-            Square destination = chessBoard.getSquareAt(xStart-1,yStart+1);
-            if (leftNeighbour instanceof Pawn && ((Pawn) leftNeighbour).getEnPassantCapture()) {
-                possibleSquares.add(destination);
-            }
-        }
         return possibleSquares;
 
     }

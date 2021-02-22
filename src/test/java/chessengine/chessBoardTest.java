@@ -196,7 +196,20 @@ class chessBoardTest {
         Pawn blackPawn = (Pawn) chessBoard.getSquareAt("B5").getCurrentPiece();
         System.out.println(blackPawn.getEnPassantCapture());
         Assertions.assertDoesNotThrow(() -> chessBoard.move("A5", "B6"));
+        Assertions.assertNull(chessBoard.getSquareAt("B5").getCurrentPiece());
+    }
 
+    @Test
+    void pawnCantTakeEnPassant() throws IllegalMoveException {
+        List<ImmutablePair<String, Piece>> pieces = List.of(
+                new ImmutablePair<>("A5", new Pawn(PlayerColor.WHITE)),
+                new ImmutablePair<>("B7", new Pawn(PlayerColor.BLACK)),
+                new ImmutablePair<>("C7", new Pawn(PlayerColor.BLACK)),
+                new ImmutablePair<>("B2", new Pawn(PlayerColor.WHITE)));
+        ChessBoard chessBoard = new ChessBoard(pieces);
+        chessBoard.move("B7", "B5");
+        chessBoard.move("B2", "B3");
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move("A5", "B6"));
     }
     //</editor-fold>
 
@@ -341,7 +354,8 @@ class chessBoardTest {
             "D4, C4",
             "D4, D5",
             "D4, E4",
-            "D4, D3"
+            "D4, D3",
+            "D3, D2"
 
     })
     void rookCanTakePieces(String initialSquare, String destinationSquare) {
@@ -417,6 +431,66 @@ class chessBoardTest {
     //<editor-fold desc="Queen tests">
 
     //TODO add queen tests!
+    @ParameterizedTest
+    @CsvSource({
+            "D4, C6",
+            "D4, C2",
+            "D4, B5",
+            "D4, B3",
+            "D4, E6",
+            "D4, E2",
+            "D4, F5",
+            "D4, F3"
+    })
+    void illegalQueenMoves(String initialSquare, String destinationSquare) {
+        ImmutablePair<String, Piece> testPair = new ImmutablePair<>(initialSquare, new Queen(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(testPair));
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move(initialSquare, destinationSquare));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "C5, B6",
+            "C4, B4",
+            "C3, B2",
+            "D5, D6",
+            "D3, D2",
+            "E5, F6",
+            "E4, F4",
+            "E3, F2"
+    })
+    void queenCantMoveThroughPieces(String obstructingSquare, String destinationSquare) {
+        String initialSquare = "D4";
+        List<ImmutablePair<String, Piece>> blackPieces = List.of(
+                new ImmutablePair<>(initialSquare, new Queen(PlayerColor.BLACK)),
+                new ImmutablePair<>(obstructingSquare, new Pawn(PlayerColor.BLACK)));
+        List<ImmutablePair<String, Piece>> blackAndWhitePieces = List.of(
+                new ImmutablePair<>(initialSquare, new Queen(PlayerColor.BLACK)),
+                new ImmutablePair<>(obstructingSquare, new Pawn(PlayerColor.WHITE)));
+        ChessBoard chessBoardBlack = new ChessBoard(blackPieces);
+        ChessBoard chessBoardWhite = new ChessBoard(blackAndWhitePieces);
+        Assertions.assertAll(
+                () -> Assertions.assertThrows(IllegalMoveException.class, () -> chessBoardBlack.move(initialSquare, destinationSquare)),
+                () -> Assertions.assertThrows(IllegalMoveException.class, () -> chessBoardWhite.move(initialSquare, destinationSquare)));
+    }
+    @ParameterizedTest
+    @CsvSource({
+            "C5, B6",
+            "C4, B4",
+            "C3, B2",
+            "D5, D6",
+            "D3, D2",
+            "E5, F6",
+            "E4, F4",
+            "E3, F2"
+    })
+    void queenCanTakePiecesOfOtherColor(String initialSquare, String destinationSquare) {
+        List<ImmutablePair<String, Piece>> blackAndWhitePieces = List.of(
+                new ImmutablePair<>(initialSquare, new Queen(PlayerColor.BLACK)),
+                new ImmutablePair<>(destinationSquare, new Pawn(PlayerColor.WHITE)));
+        ChessBoard chessBoard = new ChessBoard(blackAndWhitePieces);
+        Assertions.assertDoesNotThrow(()-> chessBoard.move(initialSquare, destinationSquare));
+    }
 
     //</editor-fold>
 
