@@ -535,19 +535,30 @@ class chessBoardTest {
     }
 
     @Test
-    void kingPinnedPieceCantMove() {
-        King blackKing = new King(PlayerColor.BLACK);
-        ImmutablePair<String, Piece> blackKingAndSquare = new ImmutablePair<>("D5", blackKing);
-        ImmutablePair<String, Piece> blackRookAndSquare = new ImmutablePair<>("D4", new Rook(PlayerColor.BLACK));
-        ImmutablePair<String, Piece> whiteRookAndSquare = new ImmutablePair<>("D2", new Rook(PlayerColor.WHITE));
-        ChessBoard chessBoard = new ChessBoard(List.of(blackKingAndSquare, blackRookAndSquare, whiteRookAndSquare));
-        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move("D4", "C4"));
-        Assertions.assertTrue(chessBoard.getSquareAt("D4").getCurrentPiece() instanceof Rook);
+    void kingPinnedPieceCantMove() throws IllegalMoveException {
+        King whiteKing = new King(PlayerColor.WHITE);
+        ImmutablePair<String, Piece> whiteKingAndSquare = new ImmutablePair<>("A5", whiteKing);
+        ImmutablePair<String, Piece> whitePawnAndSquare = new ImmutablePair<>("B5", new Pawn(PlayerColor.WHITE));
+        ImmutablePair<String, Piece> blackPawnAndSquare = new ImmutablePair<>("C7", new Pawn(PlayerColor.BLACK));
+        ImmutablePair<String, Piece> blackRookAndSquare = new ImmutablePair<>("D5", new Rook(PlayerColor.BLACK));
+        ChessBoard chessBoard = new ChessBoard(List.of(whiteKingAndSquare, blackRookAndSquare, whitePawnAndSquare, blackPawnAndSquare));
+        chessBoard.move("C7", "C5");
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move("B5", "C6"));
+        Assertions.assertTrue(chessBoard.getSquareAt("B5").getCurrentPiece() instanceof Pawn &&
+                chessBoard.getSquareAt("B5").getCurrentPiece().getColor().equals(PlayerColor.WHITE));
+        Assertions.assertTrue(chessBoard.getSquareAt("C7").getCurrentPiece() instanceof Pawn &&
+                chessBoard.getSquareAt("C7").getCurrentPiece().getColor().equals(PlayerColor.BLACK));
+    }
+
+
+    @Test
+    void kingPinnedPieceCantMoveEnPassant() {
+
     }
 
     @Test
     void kingIsCheckMated() {
-        
+
     }
 
     //</editor-fold>

@@ -177,6 +177,7 @@ public class ChessBoard {
         Square currentSquare = getSquareAt(origin);
         Square destinationSquare = getSquareAt(destination);
         Map<Square, Piece> currentPieceSet = piece.getColor().equals(PlayerColor.BLACK)? blackPieceSet: whitePieceSet;
+        Map<Square, Piece> opponentsPieceSet = piece.getColor().equals(PlayerColor.BLACK)? whitePieceSet: blackPieceSet;
         PlayerColor colorOpponent = piece.getColor().equals(PlayerColor.BLACK)? PlayerColor.WHITE: PlayerColor.BLACK;
         Set<Square> ownAttackingSquares = getAttackingSquares(piece.getColor());
         Set<Square> opponentsAttackingSquares = getAttackingSquaresOpponent(piece.getColor());
@@ -188,6 +189,8 @@ public class ChessBoard {
         }
 
         List<Square> legalMoves = piece.getPossibleMoves(this, currentSquare.getPositionX(), currentSquare.getPositionY());
+        MutablePair<Square, King> ownKing = piece.getColor().equals(PlayerColor.BLACK)? blackKing: whiteKing;
+        MutablePair<Square, King> otherKing = piece.getColor().equals(PlayerColor.BLACK)? whiteKing: blackKing;
 
         // en passant
         if (piece instanceof Pawn && Math.abs(currentSquare.getPositionY() - destinationSquare.getPositionY()) == 2) {
@@ -196,7 +199,6 @@ public class ChessBoard {
 
         if (legalMoves.contains(destinationSquare)) {
             // first check that you cannot check yourself!
-            System.out.println("got here");
             // update pieceSet THEN update attackingSquares
             Piece pieceOnDestination = destinationSquare.getCurrentPiece();
             destinationSquare.setCurrentPiece(piece);
@@ -210,12 +212,10 @@ public class ChessBoard {
             ownAttackingSquares = this.setAttackingSquares(piece.getColor());
 
             // check for self check!
-            MutablePair<Square, King> ownKing = piece.getColor().equals(PlayerColor.BLACK)? blackKing: whiteKing;
             opponentsAttackingSquares = this.setAttackingSquares(colorOpponent);
 
             if (opponentsAttackingSquares.contains(ownKing.getLeft())) {
                 // undo move and throw illegalMoveException
-                System.out.println("got here");
                 if (pieceOnDestination != null) {
                     destinationSquare.setCurrentPiece(pieceOnDestination);
                 }
@@ -226,7 +226,6 @@ public class ChessBoard {
             }
 
             // check for check on opponents king
-            MutablePair<Square, King> otherKing = piece.getColor().equals(PlayerColor.BLACK)? whiteKing: blackKing;
             if (ownAttackingSquares.contains(otherKing.getLeft())) {
                 otherKing.getRight().setChecked(true);
             }
@@ -243,16 +242,36 @@ public class ChessBoard {
         else if (piece instanceof Pawn && lastMovedPiece instanceof Pawn) {
             int offset = piece.getColor().equals(PlayerColor.BLACK) ? 1: -1;
             if (currentSquare.getPositionY() == (piece.getColor().equals(PlayerColor.BLACK)? 4 : 5)) { // we know we can cast to pawn else legalMoves would not contain this move.
-                Piece pawnMightBeCaptured = getSquareAt(destinationSquare.getPositionX(), destinationSquare.getPositionY() + offset).getCurrentPiece();
+                Square square = getSquareAt(destinationSquare.getPositionX(), destinationSquare.getPositionY() + offset);
+                Piece pawnMightBeCaptured = square.getCurrentPiece();
                 if (pawnMightBeCaptured.getColor() != piece.getColor() &&
                         pawnMightBeCaptured instanceof Pawn &&
-                        ((Pawn) pawnMightBeCaptured).getEnPassantCapture()) {
-                    getSquareAt(destinationSquare.getPositionX(), destinationSquare.getPositionY() + offset).removePiece();
+                        ((Pawn) pawnMightBeCaptured).getEnPassantCapture() &&
+                        !destinationSquare.isContested()) { // maybe redundant check since pawns can only be eligible for en passant capture when last move was a pawn double move
+
+                    // check for self check!
+                    square.removePiece();
+                    destinationSquare.setCurrentPiece(piece);
+                    currentPieceSet.remove(currentSquare);
+                    currentPieceSet.put(destinationSquare, piece);
+                    opponentsPieceSet.remove(square);
+                    opponentsAttackingSquares = this.setAttackingSquares(colorOpponent);
+                    if (opponentsAttackingSquares.contains(ownKing.getLeft())) {
+                        System.out.println("got here");
+                        square.setCurrentPiece(pawnMightBeCaptured);
+                        currentSquare.setCurrentPiece(piece);
+                        currentPieceSet.put(currentSquare, piece);
+                        currentPieceSet.remove(destinationSquare, piece);
+                        opponentsPieceSet.put(square, pawnMightBeCaptured);
+                        destinationSquare.removePiece();
+                        throw new IllegalMoveException("Check yourself before you check yourself");
+                    }
                 }
             }
-            destinationSquare.setCurrentPiece(piece);
+
             lastMovedPiece = piece;
             currentSquare.removePiece();
+            // add check on enemy king check.
             return new Move(origin, destination);
         }
 
