@@ -1,21 +1,27 @@
 package chessengine;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.jetbrains.annotations.NotNull;
 
 public class ChessBoard {
     private final List<String> fileNames = List.of("A", "B", "C", "D", "E", "F", "G", "H");
     private Map<String, Map<Integer, Square>> allFiles;
     private Piece lastMovedPiece;
+    private Set<Square> blackAttackingSquares = new HashSet<>();
+    private Set<Square> whiteAttackingSquares = new HashSet<>();
+    private Map<Square, Piece> blackPieceSet = new HashMap<>();
+    private Map<Square, Piece> whitePieceSet = new HashMap<>();
+    private MutablePair<Square, King> blackKing = new MutablePair<>();
+    private MutablePair<Square, King> whiteKing = new MutablePair<>();
 
     public ChessBoard(List<ImmutablePair<String, Piece>> squaresAndPieces) {
         assembleBoard();
         addPiecesFromPairs(squaresAndPieces);
+
     }
     public ChessBoard() {
         assembleBoard();
@@ -59,12 +65,15 @@ public class ChessBoard {
         this.allFiles.get("F").get(8).setCurrentPiece(new Bishop(PlayerColor.BLACK));
         this.allFiles.get("G").get(8).setCurrentPiece(new Knight(PlayerColor.BLACK));
         this.allFiles.get("H").get(8).setCurrentPiece(new Rook(PlayerColor.BLACK));
-
+        // compute attacking squares
+        setPieceSets();
+        this.blackAttackingSquares = setAttackingSquares(PlayerColor.BLACK);
+        this.whiteAttackingSquares = setAttackingSquares(PlayerColor.WHITE);
         return this;
     }
 
     public ChessBoard addAPiece(ImmutablePair<String, Piece> squareAndPiece) {
-        Square toPlacePieceAt = this.getSquareAt(squareAndPiece.getLeft().substring(0,1), Integer.parseInt(squareAndPiece.getLeft().substring(1)));
+        Square toPlacePieceAt = this.getSquareAt(squareAndPiece.getLeft());
         toPlacePieceAt.setCurrentPiece(squareAndPiece.getRight());
         return this;
     }
@@ -72,8 +81,26 @@ public class ChessBoard {
     @NotNull
     public ChessBoard addPiecesFromPairs(List<ImmutablePair<String, Piece>> piecesToAdd) {
         for (ImmutablePair<String, Piece> pair : piecesToAdd) {
-            this.getSquareAt(pair.getLeft()).setCurrentPiece(pair.getRight());
+            Square currentSquare = this.getSquareAt(pair.getLeft());
+            currentSquare.setCurrentPiece(pair.getRight());
+            if (pair.getRight().getColor().equals(PlayerColor.WHITE)) {
+                this.whitePieceSet.put(this.getSquareAt(pair.getLeft()), pair.getRight());
+                if (pair.getRight() instanceof King) {
+                    whiteKing.setRight((King) pair.getRight());
+                    whiteKing.setLeft(currentSquare);
+                }
+            }
+            else {
+                this.blackPieceSet.put(this.getSquareAt(pair.getLeft()), pair.getRight());
+                if (pair.getRight() instanceof King) {
+                    blackKing.setRight((King) pair.getRight());
+                    blackKing.setLeft(currentSquare);
+                }
+            }
         }
+//        setPieceSets(); //
+        this.blackAttackingSquares = setAttackingSquares(PlayerColor.BLACK);
+        this.whiteAttackingSquares = setAttackingSquares(PlayerColor.WHITE);
         return this;
     }
 
@@ -93,11 +120,55 @@ public class ChessBoard {
     }
 
     @NotNull
-    public Piece removePiece(String a1) {
-        Square square = this.getSquareAt(a1.substring(0,1), Integer.parseInt(a1.substring(1)));
+    public Piece removePiece(String squareName) {
+        Square square = this.getSquareAt(squareName);
         Piece piece = square.getCurrentPiece();
         square.removePiece();
         return piece;
+    }
+
+    private Set<Square> setAttackingSquares(PlayerColor color) {
+        Map<Square, Piece> currentMap = color.equals(PlayerColor.BLACK)? blackPieceSet: whitePieceSet;
+        Set<Square> attackingSquares = new HashSet<>();
+        for (Square currentSquare: currentMap.keySet()) {
+            attackingSquares.addAll(currentSquare.getCurrentPiece().getPossibleMoves(this, currentSquare.getPositionX(), currentSquare.getPositionY()));
+        }
+        return attackingSquares;
+    }
+
+    public Set<Square> getAttackingSquares(PlayerColor color) {
+        return color.equals(PlayerColor.BLACK)?  this.blackAttackingSquares: this.whiteAttackingSquares;
+    }
+
+    public Set<Square> getAttackingSquaresOpponent(PlayerColor color) {
+        return color.equals(PlayerColor.BLACK)? this.whiteAttackingSquares: this.blackAttackingSquares;
+    }
+
+    private void setPieceSets() {
+        for (int i = 1; i < 9; i++) {
+            for (int j = 1; j < 9; j++) {
+                Square currentSquare = getSquareAt(i, j);
+                if (currentSquare.getCurrentPiece() != null) {
+                    Piece currentPiece = currentSquare.getCurrentPiece();
+                    if (currentPiece.getColor().equals(PlayerColor.BLACK)) {
+                        blackPieceSet.put(currentSquare, currentPiece);
+                    }
+                    else if (currentPiece.getColor().equals(PlayerColor.WHITE)) {
+                        whitePieceSet.put(currentSquare, currentPiece);
+                    }
+                    if (currentPiece instanceof King) {
+                        if (currentPiece.getColor().equals(PlayerColor.BLACK)) {
+                            this.blackKing.right = (King) currentPiece;
+                            this.blackKing.setLeft(currentSquare);
+                        }
+                        else {
+                            this.whiteKing.setRight((King) currentPiece);
+                            this.whiteKing.setLeft(currentSquare);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public Move move(String origin, String destination) throws IllegalMoveException {
@@ -105,32 +176,73 @@ public class ChessBoard {
         Piece piece = getSquareAt(origin).getCurrentPiece();
         Square currentSquare = getSquareAt(origin);
         Square destinationSquare = getSquareAt(destination);
+        Map<Square, Piece> currentPieceSet = piece.getColor().equals(PlayerColor.BLACK)? blackPieceSet: whitePieceSet;
+        PlayerColor colorOpponent = piece.getColor().equals(PlayerColor.BLACK)? PlayerColor.WHITE: PlayerColor.BLACK;
+        Set<Square> ownAttackingSquares = getAttackingSquares(piece.getColor());
+        Set<Square> opponentsAttackingSquares = getAttackingSquaresOpponent(piece.getColor());
 
-        if (lastMovedPiece != null && lastMovedPiece.getColor() == piece.getColor()) {
+        // If black moved, black can't move again. Likewise for white
+        if (lastMovedPiece != null && lastMovedPiece.getColor().equals(piece.getColor())) {
             String errorMessage = "not " + piece.getColor() + "'s "+ "turn to make a move";
             throw new IllegalMoveException(errorMessage);
         }
+
         List<Square> legalMoves = piece.getPossibleMoves(this, currentSquare.getPositionX(), currentSquare.getPositionY());
-        legalMoves.forEach(x -> System.out.println(this.fileNames.get(x.getPositionX()-1)+" "+ x.getPositionY()));
+
+        // en passant
         if (piece instanceof Pawn && Math.abs(currentSquare.getPositionY() - destinationSquare.getPositionY()) == 2) {
             ((Pawn) piece).setEnPassantCapture(true);
         }
 
         if (legalMoves.contains(destinationSquare)) {
+            // first check that you cannot check yourself!
+            System.out.println("got here");
+            // update pieceSet THEN update attackingSquares
+            Piece pieceOnDestination = destinationSquare.getCurrentPiece();
+            destinationSquare.setCurrentPiece(piece);
+            currentSquare.removePiece();
+            currentPieceSet.remove(currentSquare);
+            currentPieceSet.put(destinationSquare, piece);
 
-            getSquareAt(destination).setCurrentPiece(piece);
+
+
+            // update own attacking squares
+            ownAttackingSquares = this.setAttackingSquares(piece.getColor());
+
+            // check for self check!
+            MutablePair<Square, King> ownKing = piece.getColor().equals(PlayerColor.BLACK)? blackKing: whiteKing;
+            opponentsAttackingSquares = this.setAttackingSquares(colorOpponent);
+
+            if (opponentsAttackingSquares.contains(ownKing.getLeft())) {
+                // undo move and throw illegalMoveException
+                System.out.println("got here");
+                if (pieceOnDestination != null) {
+                    destinationSquare.setCurrentPiece(pieceOnDestination);
+                }
+                currentSquare.setCurrentPiece(piece);
+                currentPieceSet.put(currentSquare, piece);
+                currentPieceSet.remove(destinationSquare, piece);
+                throw new IllegalMoveException("Piece is pinned mate");
+            }
+
+            // check for check on opponents king
+            MutablePair<Square, King> otherKing = piece.getColor().equals(PlayerColor.BLACK)? whiteKing: blackKing;
+            if (ownAttackingSquares.contains(otherKing.getLeft())) {
+                otherKing.getRight().setChecked(true);
+            }
+
 
             if (lastMovedPiece instanceof Pawn && ((Pawn) lastMovedPiece).getEnPassantCapture()) {
-                ((Pawn) lastMovedPiece).setEnPassantCapture(false);
+                ((Pawn) lastMovedPiece).setEnPassantCapture(false); // unset eligibility for en passant capture to prevent weird captures
             }
+
             lastMovedPiece = piece;
             return new Move(origin, destination);
         }
 
-        // for en passant
         else if (piece instanceof Pawn && lastMovedPiece instanceof Pawn) {
-            int offset = piece.getColor() == PlayerColor.BLACK ? 1: -1;
-            if (currentSquare.getPositionY() == (piece.getColor() == PlayerColor.BLACK? 4 : 5)) { // we know we can cast to pawn else legalMoves would not contain this move.
+            int offset = piece.getColor().equals(PlayerColor.BLACK) ? 1: -1;
+            if (currentSquare.getPositionY() == (piece.getColor().equals(PlayerColor.BLACK)? 4 : 5)) { // we know we can cast to pawn else legalMoves would not contain this move.
                 Piece pawnMightBeCaptured = getSquareAt(destinationSquare.getPositionX(), destinationSquare.getPositionY() + offset).getCurrentPiece();
                 if (pawnMightBeCaptured.getColor() != piece.getColor() &&
                         pawnMightBeCaptured instanceof Pawn &&
@@ -138,10 +250,9 @@ public class ChessBoard {
                     getSquareAt(destinationSquare.getPositionX(), destinationSquare.getPositionY() + offset).removePiece();
                 }
             }
-            else {
-                getSquareAt(origin).removePiece();
-            }
-
+            destinationSquare.setCurrentPiece(piece);
+            lastMovedPiece = piece;
+            currentSquare.removePiece();
             return new Move(origin, destination);
         }
 

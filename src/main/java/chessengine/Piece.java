@@ -24,6 +24,7 @@ public abstract class Piece {
     public abstract List<List<Pair<Integer, Integer>>> getDirections(int xStart, int yStart);
 
     public List<Square> getPossibleMoves(ChessBoard chessBoard, int xStart, int yStart) {
+//        !(currentSquare.getCurrentPiece() instanceof King) && !(currentSquare.getCurrentPiece().getColor().equals(this.color))
         List<Square> legalMoves = new ArrayList<>();
         Square currentSquare;
         List<List<Pair<Integer, Integer>>> possibleDirections = getDirections(xStart, yStart);
@@ -33,7 +34,7 @@ public abstract class Piece {
                 int y = integerIntegerPair.getRight();
                 currentSquare = chessBoard.getSquareAt(x, y);
                 if (currentSquare.isContested()) {
-                    if (currentSquare.getCurrentPiece().getColor() != this.color) {
+                    if (!currentSquare.getCurrentPiece().getColor().equals(this.color)) {
                         legalMoves.add(currentSquare);
                     }
                     break;

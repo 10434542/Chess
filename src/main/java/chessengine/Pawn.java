@@ -18,7 +18,7 @@ public class Pawn extends Piece {
     }
 
     public void setEnPassantCapture(boolean canBeCaptured) {
-        this.enPassantCapture = true;
+        this.enPassantCapture = canBeCaptured;
     }
 
     @Override

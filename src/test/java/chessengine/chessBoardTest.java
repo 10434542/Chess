@@ -496,7 +496,59 @@ class chessBoardTest {
 
     //<editor-fold desc="King tests">
 
-    //TODO add King tests (take forks/pins into account)
+    //TODO add King tests (take pins into account)
+    @ParameterizedTest
+    @CsvSource({
+            "D4, D5",
+            "D4, C5",
+            "D4, C4",
+            "D4, C3",
+            "D4, D3",
+            "D4, E5",
+            "D4, E4",
+            "D4, E3",
+    })
+    void legalKingMoves(String initialSquare, String destinationSquare) {
+        ImmutablePair<String, Piece> kingAndSquare = new ImmutablePair<>(initialSquare, new King(PlayerColor.BLACK));
+        ChessBoard chessBoard = new ChessBoard().addPiecesFromPairs(List.of(kingAndSquare));
+        Assertions.assertDoesNotThrow(() -> chessBoard.move(initialSquare, destinationSquare));
+    }
+
+    @Test
+    void kingCanBeChecked() throws IllegalMoveException {
+        King blackKing = new King(PlayerColor.BLACK);
+        ImmutablePair<String, Piece> kingAndSquare = new ImmutablePair<>("D4", blackKing);
+        ImmutablePair<String, Piece> rookAndSquare = new ImmutablePair<>("C3", new Rook(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(kingAndSquare, rookAndSquare));
+        chessBoard.move("C3", "C4");
+        Assertions.assertTrue(blackKing.isChecked());
+    }
+
+    @Test
+    void kingCantMoveToAttackedSquare() {
+        King blackKing = new King(PlayerColor.BLACK);
+        ImmutablePair<String, Piece> kingAndSquare = new ImmutablePair<>("D4", blackKing);
+        ImmutablePair<String, Piece> rookAndSquare = new ImmutablePair<>("C3", new Rook(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(kingAndSquare, rookAndSquare));
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move("D4", "C4"));
+        Assertions.assertTrue(chessBoard.getSquareAt("D4").getCurrentPiece() instanceof King);
+    }
+
+    @Test
+    void kingPinnedPieceCantMove() {
+        King blackKing = new King(PlayerColor.BLACK);
+        ImmutablePair<String, Piece> blackKingAndSquare = new ImmutablePair<>("D5", blackKing);
+        ImmutablePair<String, Piece> blackRookAndSquare = new ImmutablePair<>("D4", new Rook(PlayerColor.BLACK));
+        ImmutablePair<String, Piece> whiteRookAndSquare = new ImmutablePair<>("D2", new Rook(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(blackKingAndSquare, blackRookAndSquare, whiteRookAndSquare));
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move("D4", "C4"));
+        Assertions.assertTrue(chessBoard.getSquareAt("D4").getCurrentPiece() instanceof Rook);
+    }
+
+    @Test
+    void kingIsCheckMated() {
+        
+    }
 
     //</editor-fold>
 }
