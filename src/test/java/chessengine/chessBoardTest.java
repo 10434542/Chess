@@ -110,6 +110,22 @@ class chessBoardTest {
                 () -> Assertions.assertTrue(aQueen instanceof Queen)
         );
     }
+
+    @Test
+    void legalMoveShouldUpdateAttackingSquares() throws IllegalMoveException {
+        List<String> fileNames =  List.of("A", "B", "C", "D", "E", "F", "G", "H");
+        ImmutablePair<String, Piece> whitePawn = new ImmutablePair<>("B2", new Pawn(PlayerColor.WHITE));
+        ImmutablePair<String, Piece> blackBishop = new ImmutablePair<>("A3", new Bishop(PlayerColor.BLACK));
+        ChessBoard chessBoard = new ChessBoard(List.of(whitePawn, blackBishop));
+        chessBoard.getAttackingSquares(PlayerColor.BLACK).forEach(x -> System.out.print(fileNames.get(x.getPositionX()-1) + ""+ x.getPositionY()+ " "));
+        System.out.println("\n");
+        chessBoard.getAttackingSquares(PlayerColor.WHITE).forEach(x -> System.out.print(fileNames.get(x.getPositionX()-1) + ""+ x.getPositionY() + " "));
+        chessBoard.move("B2", "B4");
+        System.out.println("\n");
+        chessBoard.getAttackingSquares(PlayerColor.BLACK).forEach(x -> System.out.print(fileNames.get(x.getPositionX()-1) + ""+ x.getPositionY()+ " "));
+        System.out.println("\n");
+        chessBoard.getAttackingSquares(PlayerColor.WHITE).forEach(x -> System.out.print(fileNames.get(x.getPositionX()-1) + ""+ x.getPositionY() + " "));
+    }
     //</editor-fold>
 
     //<editor-fold desc="Pawn tests">
@@ -535,8 +551,20 @@ class chessBoardTest {
     }
 
     @Test
+    void kingCanTakeAttackingPiece() throws IllegalMoveException {
+        King blackKing = new King(PlayerColor.BLACK);
+        ImmutablePair<String, Piece> kingAndSquare = new ImmutablePair<>("D4", blackKing);
+        ImmutablePair<String, Piece> rookAndSquare = new ImmutablePair<>("C3", new Rook(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(kingAndSquare, rookAndSquare));
+        chessBoard.move("C3", "D3");
+        Assertions.assertDoesNotThrow(() -> chessBoard.move("D4", "D3"));
+        Assertions.assertTrue(chessBoard.getSquareAt("D3").getCurrentPiece() instanceof King);
+    }
+
+    @Test
     void kingPinnedPieceCantMove() throws IllegalMoveException {
         King whiteKing = new King(PlayerColor.WHITE);
+        List<String> fileNames =  List.of("A", "B", "C", "D", "E", "F", "G", "H");
         ImmutablePair<String, Piece> whiteKingAndSquare = new ImmutablePair<>("A5", whiteKing);
         ImmutablePair<String, Piece> whitePawnAndSquare = new ImmutablePair<>("B5", new Pawn(PlayerColor.WHITE));
         ImmutablePair<String, Piece> blackPawnAndSquare = new ImmutablePair<>("C7", new Pawn(PlayerColor.BLACK));
@@ -546,19 +574,32 @@ class chessBoardTest {
         Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move("B5", "C6"));
         Assertions.assertTrue(chessBoard.getSquareAt("B5").getCurrentPiece() instanceof Pawn &&
                 chessBoard.getSquareAt("B5").getCurrentPiece().getColor().equals(PlayerColor.WHITE));
-        Assertions.assertTrue(chessBoard.getSquareAt("C7").getCurrentPiece() instanceof Pawn &&
-                chessBoard.getSquareAt("C7").getCurrentPiece().getColor().equals(PlayerColor.BLACK));
-    }
-
-
-    @Test
-    void kingPinnedPieceCantMoveEnPassant() {
-
+        Assertions.assertTrue(chessBoard.getSquareAt("C5").getCurrentPiece() instanceof Pawn &&
+                chessBoard.getSquareAt("C5").getCurrentPiece().getColor().equals(PlayerColor.BLACK));
     }
 
     @Test
-    void kingIsCheckMated() {
+    void kingMustBeUnCheckedWhenChecked() throws IllegalMoveException {
+        King blackKing = new King(PlayerColor.WHITE);
+        ImmutablePair<String, Piece> kingAndSquare = new ImmutablePair<>("D4", blackKing);
+        ImmutablePair<String, Piece> pawnAndSquare = new ImmutablePair<>("G2", new Pawn(PlayerColor.WHITE));
+        ImmutablePair<String, Piece> rookAndSquare = new ImmutablePair<>("C3", new Rook(PlayerColor.BLACK));
+        ChessBoard chessBoard = new ChessBoard(List.of(kingAndSquare, rookAndSquare, pawnAndSquare));
+        chessBoard.move("C3", "D3");
+        Assertions.assertThrows(IllegalMoveException.class, () -> chessBoard.move("G2", "G3"));
+    }
 
+    @Test
+    void kingIsCheckMated() throws IllegalMoveException {
+        ImmutablePair<String, Piece> kingAndSquare = new ImmutablePair<>("H8", new King(PlayerColor.BLACK));
+        ImmutablePair<String, Piece> pawnOne = new ImmutablePair<>("H7", new Pawn(PlayerColor.BLACK));
+        ImmutablePair<String, Piece> pawnTwo = new ImmutablePair<>("G7", new Pawn(PlayerColor.BLACK));
+        ImmutablePair<String, Piece> rook = new ImmutablePair<>("E4", new Rook(PlayerColor.WHITE));
+        ChessBoard chessBoard = new ChessBoard(List.of(kingAndSquare, pawnOne, pawnTwo, rook));
+        chessBoard.move("E4", "E8");
+        Assertions.assertAll(
+                () -> Assertions.assertTrue(((King) kingAndSquare.getRight()).isChecked()),
+                () -> Assertions.assertTrue(((King) kingAndSquare.getRight()).isCheckMated()));
     }
 
     //</editor-fold>

@@ -131,9 +131,14 @@ public class ChessBoard {
         Map<Square, Piece> currentMap = color.equals(PlayerColor.BLACK)? blackPieceSet: whitePieceSet;
         Set<Square> attackingSquares = new HashSet<>();
         for (Square currentSquare: currentMap.keySet()) {
-            attackingSquares.addAll(currentSquare.getCurrentPiece().getPossibleMoves(this, currentSquare.getPositionX(), currentSquare.getPositionY()));
+            attackingSquares.addAll(currentSquare.getCurrentPiece().getAttackSquares(this, currentSquare.getPositionX(), currentSquare.getPositionY()));
         }
         return attackingSquares;
+    }
+
+    private void updateAttackingSquares() {
+        this.blackAttackingSquares = setAttackingSquares(PlayerColor.BLACK);
+        this.whiteAttackingSquares = setAttackingSquares(PlayerColor.WHITE);
     }
 
     public Set<Square> getAttackingSquares(PlayerColor color) {
@@ -178,9 +183,8 @@ public class ChessBoard {
         Square destinationSquare = getSquareAt(destination);
         Map<Square, Piece> currentPieceSet = piece.getColor().equals(PlayerColor.BLACK)? blackPieceSet: whitePieceSet;
         Map<Square, Piece> opponentsPieceSet = piece.getColor().equals(PlayerColor.BLACK)? whitePieceSet: blackPieceSet;
-        PlayerColor colorOpponent = piece.getColor().equals(PlayerColor.BLACK)? PlayerColor.WHITE: PlayerColor.BLACK;
-        Set<Square> ownAttackingSquares = getAttackingSquares(piece.getColor());
-        Set<Square> opponentsAttackingSquares = getAttackingSquaresOpponent(piece.getColor());
+        MutablePair<Square, King> ownKing = piece.getColor().equals(PlayerColor.BLACK)? blackKing: whiteKing;
+        MutablePair<Square, King> otherKing = piece.getColor().equals(PlayerColor.BLACK)? whiteKing: blackKing;
 
         // If black moved, black can't move again. Likewise for white
         if (lastMovedPiece != null && lastMovedPiece.getColor().equals(piece.getColor())) {
@@ -189,8 +193,6 @@ public class ChessBoard {
         }
 
         List<Square> legalMoves = piece.getPossibleMoves(this, currentSquare.getPositionX(), currentSquare.getPositionY());
-        MutablePair<Square, King> ownKing = piece.getColor().equals(PlayerColor.BLACK)? blackKing: whiteKing;
-        MutablePair<Square, King> otherKing = piece.getColor().equals(PlayerColor.BLACK)? whiteKing: blackKing;
 
         // en passant
         if (piece instanceof Pawn && Math.abs(currentSquare.getPositionY() - destinationSquare.getPositionY()) == 2) {
@@ -206,28 +208,35 @@ public class ChessBoard {
             currentPieceSet.remove(currentSquare);
             currentPieceSet.put(destinationSquare, piece);
 
+            if (pieceOnDestination != null) {
+                opponentsPieceSet.remove(destinationSquare);
+            }
 
 
-            // update own attacking squares
-            ownAttackingSquares = this.setAttackingSquares(piece.getColor());
 
+            // update attacking squares
+            updateAttackingSquares();
             // check for self check!
-            opponentsAttackingSquares = this.setAttackingSquares(colorOpponent);
-
-            if (opponentsAttackingSquares.contains(ownKing.getLeft())) {
+            if (getAttackingSquaresOpponent(piece.getColor()).contains(ownKing.getLeft())) {
                 // undo move and throw illegalMoveException
                 if (pieceOnDestination != null) {
                     destinationSquare.setCurrentPiece(pieceOnDestination);
+                    opponentsPieceSet.put(destinationSquare, pieceOnDestination);
                 }
                 currentSquare.setCurrentPiece(piece);
                 currentPieceSet.put(currentSquare, piece);
                 currentPieceSet.remove(destinationSquare, piece);
-                throw new IllegalMoveException("Piece is pinned mate");
+                updateAttackingSquares();
+                throw new IllegalMoveException("checked yourself");
             }
 
             // check for check on opponents king
-            if (ownAttackingSquares.contains(otherKing.getLeft())) {
+            if (getAttackingSquares(piece.getColor()).contains(otherKing.getLeft())) {
                 otherKing.getRight().setChecked(true);
+                // add check for checkmate!
+                if (!getAttackingSquaresOpponent(piece.getColor()).contains(destinationSquare)) {
+                    return null;
+                }
             }
 
 
@@ -236,6 +245,7 @@ public class ChessBoard {
             }
 
             lastMovedPiece = piece;
+            updateAttackingSquares();
             return new Move(origin, destination);
         }
 
@@ -253,25 +263,25 @@ public class ChessBoard {
                     square.removePiece();
                     destinationSquare.setCurrentPiece(piece);
                     currentPieceSet.remove(currentSquare);
+                    currentSquare.removePiece();
                     currentPieceSet.put(destinationSquare, piece);
                     opponentsPieceSet.remove(square);
-                    opponentsAttackingSquares = this.setAttackingSquares(colorOpponent);
-                    if (opponentsAttackingSquares.contains(ownKing.getLeft())) {
-                        System.out.println("got here");
+                    updateAttackingSquares();
+                    if (getAttackingSquaresOpponent(piece.getColor()).contains(ownKing.getLeft())) {
                         square.setCurrentPiece(pawnMightBeCaptured);
                         currentSquare.setCurrentPiece(piece);
                         currentPieceSet.put(currentSquare, piece);
                         currentPieceSet.remove(destinationSquare, piece);
                         opponentsPieceSet.put(square, pawnMightBeCaptured);
                         destinationSquare.removePiece();
+                        updateAttackingSquares();
+
                         throw new IllegalMoveException("Check yourself before you check yourself");
                     }
                 }
             }
-
             lastMovedPiece = piece;
-            currentSquare.removePiece();
-            // add check on enemy king check.
+//            updateAttackingSquares();
             return new Move(origin, destination);
         }
 

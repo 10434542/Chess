@@ -8,10 +8,26 @@ import java.util.List;
 
 public class King extends Piece {
 
+    private boolean isCheckMated;
+
     protected King(PlayerColor color) {
         super(color);
     }
     private boolean isChecked = false;
+
+    @Override
+    public List<Square> getAttackSquares(ChessBoard chessBoard, int xStart, int yStart) {
+        List<Square> attackingSquares = new ArrayList<>();
+        List<List<Pair<Integer, Integer>>> possibleDirections = this.getDirections(xStart, yStart);
+        for (List<Pair<Integer, Integer>> possibleDirection : possibleDirections) {
+            for (Pair<Integer, Integer> direction : possibleDirection) {
+                Square destinationSquare = chessBoard.getSquareAt(direction.getLeft(), direction.getRight());
+
+                attackingSquares.add(destinationSquare);
+            }
+        }
+        return attackingSquares;
+    }
 
     @Override
     public List<Square> getPossibleMoves(ChessBoard chessBoard, int xStart, int yStart) {
@@ -70,5 +86,13 @@ public class King extends Piece {
 
     public void setChecked(boolean b) {
         this.isChecked = b;
+    }
+
+    public boolean isCheckMated() {
+        return isCheckMated;
+    }
+
+    public void setCheckMated() {
+        this.isCheckMated = true;
     }
 }
