@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ChessGame {
-    private ChessBoard chessBoard;
+    private final ChessBoard chessBoard;
 
     private Player currentPlayer;
     private final Player white;

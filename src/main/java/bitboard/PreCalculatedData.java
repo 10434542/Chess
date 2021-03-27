@@ -3,7 +3,7 @@ package bitboard;
 import static bitboard.BitBoardUtils.bitScanForwardDeBruijn64;
 import static bitboard.BitBoardUtils.setBit;
 
-public final class PreCalculatedData {
+public class PreCalculatedData {
 
     //<editor-fold desc="ranks and files">
     // sorted ranks, files,  diagonals AND anti-diagonals based on Little-Endian convention:
@@ -253,15 +253,51 @@ public final class PreCalculatedData {
     }
     //</editor-fold>
 
-    //<editor-fold desc="pre calculated data to be moved to PreCalculatedData class">
-    public final long[][] allPawnAttacks = getPawnAttacks();
-    public final long[] allKnightAttacks = getKnightAttacks();
-    public final long[] allKingAttacks = getKingAttacks();
-    public final long[] bishopMasksCalculated = getBishopMasks();
-    public final long[] rookMasksCalculated = getRookMasks();
-    public final long[][] bishopSliderAttacks = getBishopSliderAttacks();
-    public final long[][] rookSliderAttacks = getRookSliderAttacks();
+    //<editor-fold desc="pre calculated data">
+    private final long[][] allPawnAttacks = pawnAttacks();
+    private final long[] allKnightAttacks = knightAttacks();
+
+    private final long[] allKingAttacks = getKingAttacks();
+    private final long[] bishopMasksCalculated = getBishopMasks();
+    private final long[] rookMasksCalculated = getRookMasks();
+
+    private final long[][] bishopSliderAttacks = getBishopSliders();
+
+    private final long[][] rookSliderAttacks = getRookSliders();
     //</editor-fold>
+
+    //<editor-fold desc="getters for attacks">
+    public long[][] getAllPawnAttacks() {
+        return allPawnAttacks;
+    }
+
+    public long[] getAllKnightAttacks() {
+        return allKnightAttacks;
+    }
+
+    public long[] getAllKingAttacks() {
+        return allKingAttacks;
+    }
+
+    public long getBishopAttacks(int square, long occupancy) {
+        occupancy &= bishopMasksCalculated[square];
+        occupancy *= bishopMagics[square];
+        occupancy >>>=  (64 - relevantBishopOccupancyBits[square]);
+        return bishopSliderAttacks[square][(int)occupancy];
+    }
+
+    public long getRookAttacks(int square, long occupancy) {
+        occupancy &= rookMasksCalculated[square];
+        occupancy *= rookMagics[square];
+        occupancy >>>= (64 - relevantRookOccupancyBits[square]);
+        return rookSliderAttacks[square][(int)occupancy];
+    }
+
+    public long getQueenAttacks(int square, long occupancy) {
+        return this.getBishopAttacks(square, occupancy) | this.getRookAttacks(square, occupancy);
+    }
+
+    //</editor-fold>\
 
     //<editor-fold desc="leaper attacks: King, Knight, Pawn">
     public long maskKnightAttacks(int square) {
@@ -297,7 +333,7 @@ public final class PreCalculatedData {
         return attacks;
     }
 
-    public long[] getKnightAttacks(){
+    public long[] knightAttacks(){
         long[] attacks = new long[64];
         for (int i = 0; i < 64; i++) {
             attacks[i] = maskKnightAttacks(i);
@@ -330,7 +366,7 @@ public final class PreCalculatedData {
 
     }
 
-    public long[][] getPawnAttacks() {
+    public long[][] pawnAttacks() {
         long[][] attacks = new long[2][64];
         for (int i=0; i<64; i++) {
             attacks[0][i] = maskPawnAttacks(i, 0);
@@ -369,6 +405,7 @@ public final class PreCalculatedData {
     //</editor-fold>
 
     //<editor-fold desc="Slider pieces such as Rook, Bishop and the Queen">
+
     public long maskBishopAttacks(int square) {
         int targetRank = square / 8;
         int targetFile = square % 8;
@@ -488,7 +525,7 @@ public final class PreCalculatedData {
         return attacked;
     }
 
-    public long[][] getBishopSliderAttacks() {
+    private long[][] getBishopSliders() {
         long[][] bishopSliders = new long[64][512];
         for (int square = 0; square < 64; square++) {
             long attackMask = bishopMasksCalculated[square];
@@ -504,7 +541,7 @@ public final class PreCalculatedData {
         return bishopSliders;
     }
 
-    public long[][] getRookSliderAttacks() {
+    private long[][] getRookSliders() {
         long[][] rookSliders = new long[64][4096];
         for (int square = 0; square < 64; square++) {
             long attackMask = rookMasksCalculated[square];
@@ -520,21 +557,7 @@ public final class PreCalculatedData {
         return rookSliders;
     }
 
-    public long getBishopAttacks(int square, long occupancy) {
-        occupancy &= bishopMasksCalculated[square];
-        occupancy *= bishopMagics[square];
-        occupancy >>>=  (64 - relevantBishopOccupancyBits[square]);
-        System.out.println(occupancy);
-        System.out.println((int)occupancy);
-        return bishopSliderAttacks[square][(int)occupancy];
-    }
 
-    public long getRookAttacks(int square, long occupancy) {
-        occupancy &= rookMasksCalculated[square];
-        occupancy *= rookMagics[square];
-        occupancy >>>= (64 - relevantRookOccupancyBits[square]);
-        return rookSliderAttacks[square][(int)occupancy];
-    }
 
     public long generateSetOccupancies(int index, int numberOfBits, long attackMask) {
         long occupancy = 0L;

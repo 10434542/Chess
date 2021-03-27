@@ -13,10 +13,10 @@ public class ChessBoard {
     private Piece lastMovedPiece;
     private Set<Square> blackAttackingSquares = new HashSet<>();
     private Set<Square> whiteAttackingSquares = new HashSet<>();
-    private Map<Square, Piece> blackPieceSet = new HashMap<>();
-    private Map<Square, Piece> whitePieceSet = new HashMap<>();
-    private MutablePair<Square, King> blackKing = new MutablePair<>();
-    private MutablePair<Square, King> whiteKing = new MutablePair<>();
+    private final Map<Square, Piece> blackPieceSet = new HashMap<>();
+    private final Map<Square, Piece> whitePieceSet = new HashMap<>();
+    private final MutablePair<Square, King> blackKing = new MutablePair<>();
+    private final MutablePair<Square, King> whiteKing = new MutablePair<>();
 
     public ChessBoard(List<ImmutablePair<String, Piece>> squaresAndPieces) {
         assembleBoard();

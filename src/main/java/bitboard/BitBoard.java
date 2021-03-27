@@ -8,7 +8,7 @@ import static bitboard.BitBoardUtils.*;
 public class BitBoard {
 
     //<editor-fold desc="all bitboards">
-    private long[] bitBoards = new long[12];
+    private final long[] bitBoards = new long[12];
     private long whiteOccupancy;
     private long blackOccupancy;
     private long allOccupancy; // read allPieces
@@ -31,6 +31,8 @@ public class BitBoard {
     List<String> unicodePieces = Arrays.asList("♙", "♘", "♗", "♖", "♕", "♔", "♟︎", "♞", "♝", "♜", "♛", "♚");
     Map<Character, Integer> charToIndex = IntStream.range(0, pieceEncoding.size()).collect(HashMap::new, (m, i) -> m.put(pieceEncoding.get(i), i), Map::putAll );
     //</editor-fold>
+
+    //<editor-fold desc="Square mappings">
     List<String> squareStrings = List.of(
             "A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1",
             "A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2",
@@ -41,6 +43,7 @@ public class BitBoard {
             "A7", "B7","C7", "D7", "E7", "F7", "G7", "H7",
             "A8", "B8","C8", "D8", "E8", "F8", "G8", "H8");
     Map<String, Integer> squareToIndex = IntStream.range(0, squareStrings.size()).collect(HashMap::new, (m, i) -> m.put(squareStrings.get(i), i), Map::putAll);
+    //</editor-fold>
 
     //<editor-fold desc="castling rights">
     CastlingRight wk = CastlingRight.WHITE_KING_SIDE;
@@ -53,6 +56,10 @@ public class BitBoard {
     //<editor-fold desc=" en passant and side to move">
     int enPassantSquare = -1;
     SideToMove sideToMove;
+    //</editor-fold>
+
+    //<editor-fold desc="Precalculated data">
+    PreCalculatedData data = new PreCalculatedData();
     //</editor-fold>
 
     public BitBoard() {
@@ -76,56 +83,86 @@ public class BitBoard {
     }
 
     public BitBoard(String fenString) {
-        // initialize with fen string
         parseFenString(fenString);
     }
 
-    public void parseFenString(String fen) {
-        List<String> splitString = Arrays.asList(fen.split("/"));
-        List<String> lastRankAndStateInfo = Arrays.asList(splitString.get(7).split(" "));
-        List<String> ranks = new ArrayList<>(splitString.subList(0, 7));
-        ranks.add(lastRankAndStateInfo.get(0));
-        String side = lastRankAndStateInfo.get(1);
-        String castlingRight = lastRankAndStateInfo.get(2);
-        String enPassantSquareString = lastRankAndStateInfo.get(3);
-//        String blackTurns = lastRankAndStateInfo.get(4); may need this later on
-//        String whiteTurns = lastRankAndStateInfo.get(5);
-        this.sideToMove = side.equals(new String(new char[]{'w'})) ? SideToMove.WHITE: SideToMove.BLACK;
-        this.enPassantSquare = enPassantSquareString.equals("-")? -1: squareToIndex.get(enPassantSquareString);
-
-        int counter = 0;
-        for (String rank : ranks) {
-            for (char c: rank.trim().toCharArray()) {
-                if (Character.isLetter(c)) {
-                    this.bitBoards[charToIndex.get(c)] = setBit(this.bitBoards[charToIndex.get(c)], counter);
-                    if (charToIndex.get(c) < 6) {
-                        whiteOccupancy |= this.bitBoards[charToIndex.get(c)];
-                    }
-                    else {
-                        blackOccupancy |= this.bitBoards[charToIndex.get(c)];
-                    }
-                    counter++;
-                }
-                else {
-                    counter += Character.getNumericValue(c);
-                }
-
-            }
-        }
-        allOccupancy = whiteOccupancy | blackOccupancy;
-
-        for (char c: castlingRight.trim().toCharArray()) {
-            if (c == 'K') {
-                this.allCastlingRights |= wk.getType();
-            } else if (c == 'Q') {
-                this.allCastlingRights |= wq.getType();
-            } else if (c == 'k') {
-                this.allCastlingRights |= bk.getType();
-            } else if (c == 'q') {
-                this.allCastlingRights |= bq.getType();
-            }
-        }
+    //<editor-fold desc="getters and setters">
+    public long[] getBitBoards() {
+        return bitBoards;
     }
+
+    public long getWhiteOccupancy() {
+        return whiteOccupancy;
+    }
+
+    public void setWhiteOccupancy(long whiteOccupancy) {
+        this.whiteOccupancy = whiteOccupancy;
+    }
+
+    public long getBlackOccupancy() {
+        return blackOccupancy;
+    }
+
+    public void setBlackOccupancy(long blackOccupancy) {
+        this.blackOccupancy = blackOccupancy;
+    }
+
+    public long getAllOccupancy() {
+        return allOccupancy;
+    }
+
+    public void setAllOccupancy(long allOccupancy) {
+        this.allOccupancy = allOccupancy;
+    }
+
+    public int getWhitePawn() {
+        return whitePawn;
+    }
+
+    public int getWhiteKnight() {
+        return whiteKnight;
+    }
+
+    public int getWhiteBishop() {
+        return whiteBishop;
+    }
+
+    public int getWhiteRook() {
+        return whiteRook;
+    }
+
+    public int getWhiteQueen() {
+        return whiteQueen;
+    }
+
+    public int getWhiteKing() {
+        return whiteKing;
+    }
+
+    public int getBlackPawn() {
+        return blackPawn;
+    }
+
+    public int getBlackKnight() {
+        return blackKnight;
+    }
+
+    public int getBlackBishop() {
+        return blackBishop;
+    }
+
+    public int getBlackRook() {
+        return blackRook;
+    }
+
+    public int getBlackQueen() {
+        return blackQueen;
+    }
+
+    public int getBlackKing() {
+        return blackKing;
+    }
+    //</editor-fold>
 
     public String toBoardString() {
         List<Long> tempBitBoards = new ArrayList<>();
@@ -145,21 +182,72 @@ public class BitBoard {
 
         StringBuilder boardString = new StringBuilder();
         for (int i = 0; i < allSquaresEncoded.size(); i++) {
-            if (i != 0 && i%8 ==0) {
+            if (i != 0 && i%8==0) {
                 boardString.append("\n");
             }
             boardString.append(allSquaresEncoded.get(i));
 
         }
+        // reverse string somewhere here
         return boardString.toString();
     }
 
+    //<editor-fold desc="FEN string parser and getter">
+    public void parseFenString(String fen) {
+        List<String> splitString = Arrays.asList(fen.split("/"));
+        List<String> lastRankAndStateInfo = Arrays.asList(splitString.get(7).split(" "));
+        List<String> ranks = new ArrayList<>(splitString.subList(0, 7));
+        ranks.add(lastRankAndStateInfo.get(0));
+        String side = lastRankAndStateInfo.get(1);
+        String castlingRight = lastRankAndStateInfo.get(2);
+        String enPassantSquareString = lastRankAndStateInfo.get(3);
+//        String blackTurns = lastRankAndStateInfo.get(4); may need this later on
+//        String whiteTurns = lastRankAndStateInfo.get(5);
+        this.sideToMove = side.equals(new String(new char[]{'w'})) ? SideToMove.WHITE: SideToMove.BLACK;
+        this.enPassantSquare = enPassantSquareString.equals("-")? -1: squareToIndex.get(enPassantSquareString);
+        Collections.reverse(ranks); // else board is flipped
+
+        int counter = 0;
+        for (String rank : ranks) {
+            for (char c: rank.trim().toCharArray()) {
+                if (Character.isLetter(c)) {
+                    this.bitBoards[charToIndex.get(c)] = setBit(this.bitBoards[charToIndex.get(c)], counter);
+                    if (charToIndex.get(c) < 6) {
+                        whiteOccupancy |= this.bitBoards[charToIndex.get(c)];
+                    }
+                    else {
+                        blackOccupancy |= this.bitBoards[charToIndex.get(c)];
+                    }
+                    counter++;
+                }
+                else {
+                    counter += Character.getNumericValue(c);
+                }
+            }
+        }
+        allOccupancy = whiteOccupancy | blackOccupancy;
+
+        for (char c: castlingRight.trim().toCharArray()) {
+            if (c == 'K') {
+                this.allCastlingRights |= wk.getType();
+            } else if (c == 'Q') {
+                this.allCastlingRights |= wq.getType();
+            } else if (c == 'k') {
+                this.allCastlingRights |= bk.getType();
+            } else if (c == 'q') {
+                this.allCastlingRights |= bq.getType();
+            }
+        }
+    }
+
+    public String toFenString() {
+        String allOccupancyString = toBitBoardRepresentation(allOccupancy);
+        return "0";
+    }
+    //</editor-fold>
+
     public static void main(String[] args) {
         String startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
-        String anotherPosition = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ";
-        String andAnotherOne = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1";
-
-        BitBoard another = new BitBoard(anotherPosition);
-        another.toBoardString();
+        BitBoard another = new BitBoard(startPosition);
     }
 }
