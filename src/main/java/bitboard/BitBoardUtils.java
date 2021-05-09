@@ -1,13 +1,16 @@
 package bitboard;
 
-import java.util.ArrayList;
-import java.util.List;
+import lombok.Getter;
+
+import java.util.*;
+import java.util.stream.IntStream;
 
 public class BitBoardUtils {
 
     private BitBoardUtils() {
 
     }
+
     //<editor-fold desc="Bitboard utilities">
     private static final long deBruijn = 0x03f79d71b4cb0a89L;
 
@@ -21,6 +24,40 @@ public class BitBoardUtils {
             46,26,40,15,34,20,31,10,
             25,14,19, 9,13, 8, 7, 6,
     };
+
+    private static final @Getter List<Character> allPieceEncodings = Arrays.asList('P','N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k');
+    private static final @Getter List<String> unicodePieces = Arrays.asList("♙", "♘", "♗", "♖", "♕", "♔", "♟︎", "♞", "♝", "♜", "♛", "♚");
+    private static final @Getter Map<Character, Integer> charsToIndices = IntStream.range(0, allPieceEncodings.size())
+            .collect(HashMap::new, (m, i) -> m
+                    .put(allPieceEncodings
+                            .get(i), i), Map::putAll );
+
+    private static final List<Integer> allPromotedPieces = Arrays.asList(4, 3, 2, 1, 10, 9, 8, 7);
+    private static final @Getter Map<Integer, Character> promotedPieces = IntStream.range(0, allPromotedPieces.size())
+            .collect(HashMap::new, (m, i) -> m
+                    .put(allPromotedPieces
+                            .get(i), Character.toLowerCase(allPieceEncodings.get(i))), Map::putAll);
+
+    private static final @Getter List<String> allSquareStrings = List.of(
+            "A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1",
+            "A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2",
+            "A3", "B3","C3", "D3", "E3", "F3", "G3", "H3",
+            "A4", "B4","C4", "D4", "E4", "F4", "G4", "H4",
+            "A5", "B5","C5", "D5", "E5", "F5", "G5", "H5",
+            "A6", "B6","C6", "D6", "E6", "F6", "G6", "H6",
+            "A7", "B7","C7", "D7", "E7", "F7", "G7", "H7",
+            "A8", "B8","C8", "D8", "E8", "F8", "G8", "H8");
+
+    private static final @Getter
+    Map<String, Integer> allSquaresToIndices = IntStream.range(0, allSquareStrings.size())
+            .collect(HashMap::new, (m, i) -> m
+                    .put(allSquareStrings
+                            .get(i), i), Map::putAll);
+
+    private static final @Getter CastlingRight wk = CastlingRight.WHITE_KING_SIDE;
+    private static final @Getter CastlingRight bk = CastlingRight.BLACK_KING_SIDE;
+    private static final @Getter CastlingRight wq = CastlingRight.WHITE_QUEEN_SIDE;
+    private static final @Getter CastlingRight bq = CastlingRight.BLACK_QUEEN_SIDE;
 
     public static int bitScanForwardDeBruijn64 (long b) {
         int idx = (int)(((b & -b) * deBruijn) >>> 58);

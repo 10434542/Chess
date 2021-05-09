@@ -1,5 +1,7 @@
 package bitboard;
 
+import lombok.Getter;
+
 public enum CastlingRight {
 
     /*
@@ -13,12 +15,9 @@ public enum CastlingRight {
     BLACK_KING_SIDE(4),
     BLACK_QUEEN_SIDE(8);
 
-    private final int type;
+    private final @Getter int type;
     CastlingRight(int type) {
         this.type = type;
     }
 
-    int getType() {
-        return this.type;
-    }
 }
