@@ -13,27 +13,109 @@ import static bitboard.Piece.*;
     - make a method that tries the move and gives a bitBoardState
     - make a getBitBoardState method that creates a new bitBoardState with a move (BitBoardState)
     - make a validateMove method that takes either a move or a BitBoardState and validates the state (boolean)
+    - Adjust sideToMove within the generatePseudoLegalMove methods to NOT be current SideToMove since
  */
 public class LegalMoveGenerator implements MoveGenerator{
 
     private final PreCalculatedData calculatedData;
-    private final BitBoardState bitBoardState;
 
-    public LegalMoveGenerator(PreCalculatedData calculatedData, BitBoardState bitBoardState) {
+    public LegalMoveGenerator(PreCalculatedData calculatedData) {
         this.calculatedData = calculatedData;
-        this.bitBoardState = bitBoardState;
     }
 
-    public BitBoardState getBitBoardState(Move move, BitBoardState state) {
-        BitBoardState.BitBoardStateBuilder stateBuilder = new BitBoardState.BitBoardStateBuilder()
-                .bitBoards()
-                .allCastlingRights() // TODO
-    }
+    public BitBoardState tryMove(Move move, BitBoardState bitBoardState) {
+        BitBoardState.BitBoardStateBuilder stateBuilder = new BitBoardState.BitBoardStateBuilder();
+        long[] tempBitBoards = bitBoardState.getBitBoards();
+        tempBitBoards[move.getPieceType()] = popBit(setBit(bitBoardState.getBitBoards()[move.getPieceType()], move.getTargetSquare()), move.getSourceSquare());
 
-    public boolean validateMove(BitBoardState state, SideToMove sideToMove) {
-        if (sideToMove == SideToMove.BLACK) {
-            return isSquareAttacked(state.getBitBoards()) // TODO
+        if (move.getCapture() != 0) {
+
+            int startIndex = bitBoardState.getCurrentSide() == SideToMove.WHITE ? WHITE_PAWN: BLACK_PAWN;
+            int endIndex = bitBoardState.getCurrentSide() == SideToMove.WHITE ? BLACK_PAWN: BLACK_KING+1;
+
+            for (int i = startIndex; i< endIndex; i++) {
+                if (getBit(bitBoardState.getBitBoards()[i], move.getTargetSquare()) != 0) {
+                    tempBitBoards[move.getPieceType()] = popBit(bitBoardState.getBitBoards()[move.getPieceType()], move.getTargetSquare());
+                    break;
+                }
+            }
         }
+
+        if (move.getPromoted() != 0) {
+            int currentPawn = bitBoardState.getCurrentSide() == SideToMove.WHITE? WHITE_PAWN : BLACK_PAWN;
+            tempBitBoards[currentPawn] = popBit(bitBoardState.getBitBoards()[currentPawn], move.getTargetSquare());
+            tempBitBoards[move.getPromoted()] = setBit(bitBoardState.getBitBoards()[move.getPromoted()], move.getTargetSquare());
+        }
+
+        if (move.getEnPassant() != 0) {
+            int pawnToBeRemoved = bitBoardState.getCurrentSide() == SideToMove.WHITE? BLACK_PAWN: WHITE_PAWN;
+            int offset = bitBoardState.getCurrentSide() == SideToMove.WHITE? -8: 8;
+            tempBitBoards[pawnToBeRemoved] = popBit(bitBoardState.getBitBoards()[pawnToBeRemoved], move.getTargetSquare() + offset);
+        }
+
+        stateBuilder.enPassantSquare(-1);
+
+        if (move.getDouble() != 0) {
+            stateBuilder.enPassantSquare(bitBoardState.getCurrentSide() == SideToMove.WHITE ? move.getTargetSquare() - 8: move.getTargetSquare() + 8);
+        }
+
+        // TODO : castling + further building the BitBoardState
+
+        if (move.getCastling() != 0) {
+            switch (move.getTargetSquare()) {
+                case (6):
+                    tempBitBoards[WHITE_ROOK] = setBit(popBit(bitBoardState.getBitBoards()[WHITE_ROOK],
+                            getAllSquaresToIndices().get("H1")),
+                            getAllSquaresToIndices().get("F1"));
+                    break;
+                case (2):
+                    tempBitBoards[WHITE_ROOK] = setBit(popBit(bitBoardState.getBitBoards()[WHITE_ROOK],
+                            getAllSquaresToIndices().get("A1")),
+                            getAllSquaresToIndices().get("D1"));
+                    break;
+                case (62):
+                    tempBitBoards[BLACK_ROOK] = setBit(popBit(bitBoardState.getBitBoards()[BLACK_ROOK],
+                            getAllSquaresToIndices().get("H8")),
+                            getAllSquaresToIndices().get("F8"));
+                    break;
+                case (58):
+                    tempBitBoards[BLACK_ROOK] = setBit(popBit(bitBoardState.getBitBoards()[BLACK_ROOK],
+                            getAllSquaresToIndices().get("A8")),
+                            getAllSquaresToIndices().get("D8"));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
+        stateBuilder.allCastlingRights(bitBoardState.getAllCastlingRights() & getCastlingSquares()[move.getSourceSquare()])
+                .allCastlingRights(bitBoardState.getAllCastlingRights() & getCastlingSquares()[move.getTargetSquare()]);
+
+        long tempWhiteOccupancy = 0L;
+        long tempBlackOccupancy = 0L;
+        for (int i = 0; i < 12; i++) {
+            if (i > 6) {
+                tempBlackOccupancy |=bitBoardState.getBitBoards()[i];
+            }
+            else {
+                tempWhiteOccupancy |= bitBoardState.getBitBoards()[i];
+            }
+        }
+
+        stateBuilder.whiteOccupancy(tempWhiteOccupancy).blackOccupancy(tempBlackOccupancy).allOccupancy((tempWhiteOccupancy | tempBlackOccupancy));
+        stateBuilder.bitBoards(tempBitBoards).turnCounter(bitBoardState.getCurrentSide() == SideToMove.WHITE ? bitBoardState.getTurnCounter():)
+        stateBuilder.sideToMove(bitBoardState.getCurrentSide() == SideToMove.WHITE ? SideToMove.BLACK: SideToMove.WHITE);
+        return stateBuilder.build();
+    }
+
+    public boolean isNotInCheck(BitBoardState state) {
+        if (state.getCurrentSide() == SideToMove.BLACK) {
+            return !isSquareAttacked(bitScanForwardDeBruijn64(state.getBitBoards()[BLACK_KING]), 1, state);
+        }
+        else if (state.getCurrentSide() == SideToMove.WHITE)
+            return !isSquareAttacked(bitScanForwardDeBruijn64(state.getBitBoards()[WHITE_KING]), 0, state);
+        return true;
     }
 
     public boolean isSquareAttacked(int square, int side, BitBoardState state) {
@@ -58,29 +140,48 @@ public class LegalMoveGenerator implements MoveGenerator{
         return (calculatedData.getKingAttacks()[square] & (side == 0 ? state.getBitBoards()[WHITE_KING] : state.getBitBoards()[BLACK_KING])) != 0L;
     }
 
-    public List<Move> generateMoves(SideToMove sideToMove) {
-        List<Move> trialMoves = generatePseudoLegalMoves(sideToMove);
+
+    public List<Move> generateMoves(BitBoardState state) {
+
+        List<Move> kingMoves = generatePseudoLegalKingMoves(state).stream().filter(x->this.isNotInCheck(this.tryMove(x, state))).collect(Collectors.toList());
+
         // First check the moves of the king, if king is in check other moves should not be calculated!
-//        if (bitBoard.getBitBoardState())
-        return trialMoves;
+        if (!isNotInCheck(state)) {
+            return kingMoves;
+        }
+        else {
+            List<List<Move>> trialMoveLists = List.of(generatePseudoLegalPawnMoves(state),
+                    generatePseudoLegalCastlingMoves(state),
+                    kingMoves,
+                    generatePseudoLegalBishopMoves(state),
+                    generatePseudoLegalRookMoves(state),
+                    generatePseudoLegalQueenMoves(state),
+                    generatePseudoLegalKnightMoves(state));
+
+            return trialMoveLists.stream()
+                    .flatMap(Collection::stream)
+                    .filter(x->this.isNotInCheck(this.tryMove(x, state)))
+                    .collect(Collectors.toList());
+        }
     }
 
-    public List<Move> generatePseudoLegalMoves(SideToMove sideToMove) {
+    public List<List<Move>> generatePseudoLegalMoves(BitBoardState bitBoardState) {
 
-       return List.of(generatePseudoLegalPawnMoves(sideToMove),
-                generatePseudoLegalCastlingMoves(sideToMove),
-                generatePseudoLegalKingMoves(sideToMove),
-                generatePseudoLegalBishopMoves(sideToMove),
-                generatePseudoLegalRookMoves(sideToMove),
-                generatePseudoLegalQueenMoves(sideToMove),
-                generatePseudoLegalKnightMoves(sideToMove)).stream().flatMap(Collection::stream).collect(Collectors.toList());
+       return List.of(generatePseudoLegalPawnMoves(bitBoardState),
+                generatePseudoLegalCastlingMoves(bitBoardState),
+                generatePseudoLegalKingMoves(bitBoardState),
+                generatePseudoLegalBishopMoves(bitBoardState),
+                generatePseudoLegalRookMoves(bitBoardState),
+                generatePseudoLegalQueenMoves(bitBoardState),
+                generatePseudoLegalKnightMoves(bitBoardState));//.stream().flatMap(Collection::stream).collect(Collectors.toList());
     }
 
-    public List<Move> generatePseudoLegalPawnMoves(SideToMove currentSide) {
+    public List<Move> generatePseudoLegalPawnMoves(BitBoardState bitBoardState) {
         int originSquare;
         int targetSquare;
         long currentBitBoard;
         long currentAttacks;
+        SideToMove currentSide = bitBoardState.getCurrentSide();
         List<Move> pawnMoves = new ArrayList<>();
         if (currentSide == SideToMove.WHITE) {
             // calculate white pawn moves
@@ -198,8 +299,10 @@ public class LegalMoveGenerator implements MoveGenerator{
         return pawnMoves;
     }
 
-    public List<Move> generatePseudoLegalCastlingMoves(SideToMove currentSide) {
+    public List<Move> generatePseudoLegalCastlingMoves(BitBoardState bitBoardState) { // rename to oldState
         List<Move> castlingMoves = new ArrayList<>();
+        SideToMove currentSide = bitBoardState.getCurrentSide();
+
         if (currentSide == SideToMove.WHITE) {
             // white king side castling
             // check whether the squares to the king side are occupied
@@ -215,7 +318,7 @@ public class LegalMoveGenerator implements MoveGenerator{
 
             if ((bitBoardState.getAllCastlingRights() & getWq().getType()) != 0 && getBit(bitBoardState.getAllOccupancy(), getAllSquaresToIndices().get("D1")) == 0 &&
                     getBit(bitBoardState.getAllOccupancy(), getAllSquaresToIndices().get("C1")) == 0 &&
-                    getBit(bitBoardState.getAllOccupancy(), getAllSquaresToIndices().get("B1")) == 0 && !isSquareAttacked(getAllSquaresToIndices().get("E1"), 0, this.bitBoardState)
+                    getBit(bitBoardState.getAllOccupancy(), getAllSquaresToIndices().get("B1")) == 0 && !isSquareAttacked(getAllSquaresToIndices().get("E1"), 0, bitBoardState)
                     && !isSquareAttacked(getAllSquaresToIndices().get("D1"), 0, bitBoardState)) {
                 // add the castling move as a valid move!
                 castlingMoves.add(new Move(getAllSquaresToIndices().get("E1"), getAllSquaresToIndices().get("C1"), 5, 0,0,0,0, 1));
@@ -249,11 +352,12 @@ public class LegalMoveGenerator implements MoveGenerator{
         return castlingMoves;
     }
 
-    public List<Move> generatePseudoLegalKnightMoves(SideToMove sideToMove) {
+    public List<Move> generatePseudoLegalKnightMoves(BitBoardState bitBoardState) {
         int originSquare;
         int targetSquare;
         long currentBitBoard;
         long currentAttacks;
+        SideToMove sideToMove = bitBoardState.getCurrentSide();
         List<Move> knightMoves = new ArrayList<>();
         currentBitBoard = sideToMove == SideToMove.WHITE? bitBoardState.getBitBoards()[WHITE_KNIGHT] :
                 bitBoardState.getBitBoards()[BLACK_KNIGHT];
@@ -277,11 +381,12 @@ public class LegalMoveGenerator implements MoveGenerator{
         return knightMoves;
     }
 
-    public List<Move> generatePseudoLegalKingMoves(SideToMove sideToMove) {
+    public List<Move> generatePseudoLegalKingMoves(BitBoardState bitBoardState) {
         int originSquare;
         int targetSquare;
         long currentBitBoard;
         long currentAttacks;
+        SideToMove sideToMove = bitBoardState.getCurrentSide();
         List<Move> kingMoves = new ArrayList<>();
         currentBitBoard = sideToMove == SideToMove.WHITE? bitBoardState.getBitBoards()[WHITE_KING] :
                 bitBoardState.getBitBoards()[BLACK_KING];
@@ -305,11 +410,12 @@ public class LegalMoveGenerator implements MoveGenerator{
         return kingMoves;
     }
 
-    public List<Move> generatePseudoLegalBishopMoves(SideToMove sideToMove) {
+    public List<Move> generatePseudoLegalBishopMoves(BitBoardState bitBoardState) {
         int originSquare;
         int targetSquare;
         long currentBitBoard;
         long currentAttacks;
+        SideToMove sideToMove = bitBoardState.getCurrentSide();
         List<Move> bishopMoves = new ArrayList<>();
         currentBitBoard = sideToMove == SideToMove.WHITE? bitBoardState.getBitBoards()[WHITE_BISHOP] :
                 bitBoardState.getBitBoards()[BLACK_BISHOP];
@@ -334,11 +440,12 @@ public class LegalMoveGenerator implements MoveGenerator{
         return bishopMoves;
     }
 
-    public List<Move> generatePseudoLegalRookMoves(SideToMove sideToMove) {
+    public List<Move> generatePseudoLegalRookMoves(BitBoardState bitBoardState) {
         int originSquare;
         int targetSquare;
         long currentBitBoard;
         long currentAttacks;
+        SideToMove sideToMove = bitBoardState.getCurrentSide();
         List<Move> rookMoves = new ArrayList<>();
         currentBitBoard = sideToMove == SideToMove.WHITE? bitBoardState.getBitBoards()[WHITE_ROOK] :
                 bitBoardState.getBitBoards()[BLACK_ROOK];
@@ -363,11 +470,12 @@ public class LegalMoveGenerator implements MoveGenerator{
         return rookMoves;
     }
 
-    public List<Move> generatePseudoLegalQueenMoves(SideToMove sideToMove) {
+    public List<Move> generatePseudoLegalQueenMoves(BitBoardState bitBoardState) {
         int originSquare;
         int targetSquare;
         long currentBitBoard;
         long currentAttacks;
+        SideToMove sideToMove = bitBoardState.getCurrentSide();
         List<Move> queenMoves = new ArrayList<>();
         currentBitBoard = sideToMove == SideToMove.WHITE? bitBoardState.getBitBoards()[WHITE_BISHOP] :
                 bitBoardState.getBitBoards()[BLACK_BISHOP];

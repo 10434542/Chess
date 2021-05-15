@@ -14,6 +14,17 @@ public class BitBoardUtils {
     //<editor-fold desc="Bitboard utilities">
     private static final long deBruijn = 0x03f79d71b4cb0a89L;
 
+    private static final @Getter int[] castlingSquares = {
+            13, 15, 15, 15, 12, 15, 15, 14,
+            15, 15, 15, 15, 15, 15, 15, 15,
+            15, 15, 15, 15, 15, 15, 15, 15,
+            15, 15, 15, 15, 15, 15, 15, 15,
+            15, 15, 15, 15, 15, 15, 15, 15,
+            15, 15, 15, 15, 15, 15, 15, 15,
+            15, 15, 15, 15, 15, 15, 15, 15,
+            7, 15, 15, 15,  3, 15, 15, 11
+    };
+
     private static final int[] magicTable = {
             0, 1,48, 2,57,49,28, 3,
             61,58,50,42,38,29,17, 4,

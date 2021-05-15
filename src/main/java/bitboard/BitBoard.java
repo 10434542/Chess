@@ -9,10 +9,6 @@ import java.util.List;
 
 import static bitboard.BitBoardUtils.*;
 
-/* TODO: it is a work in progress but I want the bitBoard to be a functional class in the sense that state is not
-    tracked anywhere in the class except in the historyList of states which are all final states to simplify make and unmake move functions
-    and even making a legalMove generator
-*/
 public class BitBoard implements IBoard{
 
     private @Getter List<BitBoardState> history;
@@ -136,6 +132,10 @@ public class BitBoard implements IBoard{
         return null;
     }
 
+    public BitBoardState getBitBoardState() {
+        return null;
+    }
+
     public static void main(String[] args) {
         String startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
         String testAttackSquares = "8/8/4r3/3B4/8/8/8/8 w - - 0-1";
@@ -143,9 +143,9 @@ public class BitBoard implements IBoard{
 
         Move anotherMoveTwo =  new Move(getAllSquaresToIndices().get("D7"), getAllSquaresToIndices().get("D8"), 0, 4, 0,0,0,0);
         System.out.println(anotherMoveTwo);
-    }
-
-    public BitBoardState getBitBoardState() {
-        return null;
+        System.out.println(getAllSquaresToIndices().get("G1"));
+        System.out.println(getAllSquaresToIndices().get("C1"));
+        System.out.println(getAllSquaresToIndices().get("G8"));
+        System.out.println(getAllSquaresToIndices().get("C8"));
     }
 }
