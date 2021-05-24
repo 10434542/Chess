@@ -3,8 +3,9 @@ package bitboard;
 
 import lombok.Getter;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
+
+import static bitboard.BitBoardUtils.*;
 
 @Getter
 public class BitBoardState {
@@ -14,12 +15,14 @@ public class BitBoardState {
     private final long blackOccupancy;
     private final long allOccupancy; // read allPieces
     private final int allCastlingRights;
-    private final int[] turnCounter;
+    private final int halfMoveCounter;
+    private final int fullMoveCounter;
     private final SideToMove currentSide;
     private final int enPassantSquare;
 
     public BitBoardState(final long[] bitBoards, final long[] occupancies, final int allCastlingRights,
-                         final int[] turnCounter, final SideToMove currentSide, final int enPassantSquare) {
+                         final SideToMove currentSide, final int enPassantSquare,
+                         final int halfMoveCounter, final int fullMoveCounter) {
         this.bitBoards = bitBoards;
         this.occupancies = occupancies;
         this.whiteOccupancy = occupancies[0];
@@ -27,7 +30,8 @@ public class BitBoardState {
         this.allOccupancy = occupancies[2];
         this.allCastlingRights = allCastlingRights;
         this.currentSide = currentSide;
-        this.turnCounter = turnCounter;
+        this.halfMoveCounter = halfMoveCounter;
+        this.fullMoveCounter = fullMoveCounter;
         this.enPassantSquare = enPassantSquare;
     }
 
@@ -39,8 +43,66 @@ public class BitBoardState {
         this.allOccupancy = bitBoardStateBuilder.allOccupancy;
         this.allCastlingRights = bitBoardStateBuilder.allCastlingRights;
         this.currentSide = bitBoardStateBuilder.sideToMove;
-        this.turnCounter = bitBoardStateBuilder.turnCounter;
+        this.halfMoveCounter = bitBoardStateBuilder.halfMoveCounter;
+        this.fullMoveCounter = bitBoardStateBuilder.fullMoveCounter;
         this.enPassantSquare = bitBoardStateBuilder.enPassantSquare;
+    }
+    public static BitBoardState fenStringToBitBoardState(String fen) {
+        List<String> splitString = Arrays.asList(fen.split("/"));
+        List<String> lastRankAndStateInfo = Arrays.asList(splitString.get(7).split(" "));
+        List<String> ranks = new ArrayList<>(splitString.subList(0, 7));
+        ranks.add(lastRankAndStateInfo.get(0));
+        String castlingRight = lastRankAndStateInfo.get(2);
+        BitBoardStateBuilder bitBoardStateBuilder = new BitBoardStateBuilder();
+        bitBoardStateBuilder
+                .enPassantSquare(lastRankAndStateInfo.get(3).equals("-")? -1: getAllSquaresToIndices().get(lastRankAndStateInfo.get(3)))
+                .sideToMove(lastRankAndStateInfo.get(1).equals(new String(new char[]{'w'})) ? SideToMove.WHITE: SideToMove.BLACK)
+                .halfMoveCounter(Integer.parseInt(lastRankAndStateInfo.get(4)))
+                .fullMoveCounter(Integer.parseInt(lastRankAndStateInfo.get(5)));
+
+        Collections.reverse(ranks); // else board is flipped
+        int counter = 0;
+        long tempWhiteOccupancy = 0;
+        long tempBlackOccupancy = 0;
+        long[] tempBitBoards = new long[12];
+        int tempAllCastlingRights = 0;
+        for (String rank : ranks) {
+            for (char c: rank.trim().toCharArray()) {
+                if (Character.isLetter(c)) {
+                    tempBitBoards[getCharsToIndices().get(c)] = setBit(tempBitBoards[getCharsToIndices().get(c)], counter);
+                    if (getCharsToIndices().get(c) < 6) {
+                        tempWhiteOccupancy |= tempBitBoards[getCharsToIndices().get(c)];
+                    }
+                    else {
+                        tempBlackOccupancy |= tempBitBoards[getCharsToIndices().get(c)];
+                    }
+                    counter++;
+                }
+                else {
+                    counter += Character.getNumericValue(c);
+                }
+            }
+        }
+
+        bitBoardStateBuilder
+                .bitBoards(tempBitBoards) // forgot to put thish here lol
+                .blackOccupancy(tempBlackOccupancy)
+                .whiteOccupancy(tempWhiteOccupancy)
+                .allOccupancy(tempWhiteOccupancy | tempBlackOccupancy);
+
+        for (char c: castlingRight.trim().toCharArray()) {
+            if (c == 'K') {
+                tempAllCastlingRights |= getWk().getType();
+            } else if (c == 'Q') {
+                tempAllCastlingRights |= getWq().getType();
+            } else if (c == 'k') {
+                tempAllCastlingRights |= getBk().getType();
+            } else if (c == 'q') {
+                tempAllCastlingRights |= getBq().getType();
+            }
+        }
+        bitBoardStateBuilder.allCastlingRights(tempAllCastlingRights);
+        return bitBoardStateBuilder.build();
     }
 
     @Override
@@ -55,7 +117,6 @@ public class BitBoardState {
                 enPassantSquare == that.enPassantSquare &&
                 Arrays.equals(bitBoards, that.bitBoards) &&
                 Arrays.equals(occupancies, that.occupancies) &&
-                Arrays.equals(turnCounter, that.turnCounter) &&
                 currentSide == that.currentSide;
     }
 
@@ -64,7 +125,6 @@ public class BitBoardState {
         int result = Objects.hash(whiteOccupancy, blackOccupancy, allOccupancy, allCastlingRights, currentSide, enPassantSquare);
         result = 31 * result + Arrays.hashCode(bitBoards);
         result = 31 * result + Arrays.hashCode(occupancies);
-        result = 31 * result + Arrays.hashCode(turnCounter);
         return result;
     }
     public static class BitBoardStateBuilder {
@@ -75,7 +135,8 @@ public class BitBoardState {
         private long blackOccupancy;
         private long allOccupancy; // read allPieces
         private int allCastlingRights;
-        private int[] turnCounter;
+        private int halfMoveCounter;
+        private int fullMoveCounter;
         private SideToMove sideToMove;
         private int enPassantSquare;
 
@@ -120,8 +181,13 @@ public class BitBoardState {
             return this;
         }
 
-        public BitBoardStateBuilder turnCounter(int[] turnCounter) {
-            this.turnCounter = turnCounter;
+        public BitBoardStateBuilder halfMoveCounter(int halfMoveCounter) {
+            this.halfMoveCounter = halfMoveCounter;
+            return this;
+        }
+
+        public BitBoardStateBuilder fullMoveCounter(int fullMoveCounter) {
+            this.fullMoveCounter = fullMoveCounter;
             return this;
         }
 
