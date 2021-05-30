@@ -37,7 +37,7 @@ public class BitBoardUtils {
     };
 
     private static final @Getter List<Character> allPieceEncodings = Arrays.asList('P','N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k');
-    private static final @Getter List<String> unicodePieces = Arrays.asList("♙", "♘", "♗", "♖", "♕", "♔", "♟︎", "♞", "♝", "♜", "♛", "♚");
+    private static final @Getter List<String> unicodePieces = Arrays.asList("♙", "♘", "♗", "♖", "♕", "♔", "♟", "♞", "♝", "♜", "♛", "♚");
     private static final @Getter Map<Character, Integer> charsToIndices = IntStream.range(0, allPieceEncodings.size())
             .collect(HashMap::new, (m, i) -> m
                     .put(allPieceEncodings
@@ -121,7 +121,7 @@ public class BitBoardUtils {
 
     static long popBit(long bitBoard, int square) {
         long temp = bitBoard;
-        temp &= ~(1<< square);
+        temp &= ~(1L << square); // bug fixed added parenthesis
         return temp;
     }
 

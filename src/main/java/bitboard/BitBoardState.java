@@ -17,11 +17,11 @@ public class BitBoardState {
     private final int allCastlingRights;
     private final int halfMoveCounter;
     private final int fullMoveCounter;
-    private final SideToMove currentSide;
+    private final Side SideThatMoved;
     private final int enPassantSquare;
 
     public BitBoardState(final long[] bitBoards, final long[] occupancies, final int allCastlingRights,
-                         final SideToMove currentSide, final int enPassantSquare,
+                         final Side SideThatMoved, final int enPassantSquare,
                          final int halfMoveCounter, final int fullMoveCounter) {
         this.bitBoards = bitBoards;
         this.occupancies = occupancies;
@@ -29,7 +29,7 @@ public class BitBoardState {
         this.blackOccupancy = occupancies[1];
         this.allOccupancy = occupancies[2];
         this.allCastlingRights = allCastlingRights;
-        this.currentSide = currentSide;
+        this.SideThatMoved = SideThatMoved;
         this.halfMoveCounter = halfMoveCounter;
         this.fullMoveCounter = fullMoveCounter;
         this.enPassantSquare = enPassantSquare;
@@ -42,7 +42,7 @@ public class BitBoardState {
         this.blackOccupancy = bitBoardStateBuilder.blackOccupancy;
         this.allOccupancy = bitBoardStateBuilder.allOccupancy;
         this.allCastlingRights = bitBoardStateBuilder.allCastlingRights;
-        this.currentSide = bitBoardStateBuilder.sideToMove;
+        this.SideThatMoved = bitBoardStateBuilder.side;
         this.halfMoveCounter = bitBoardStateBuilder.halfMoveCounter;
         this.fullMoveCounter = bitBoardStateBuilder.fullMoveCounter;
         this.enPassantSquare = bitBoardStateBuilder.enPassantSquare;
@@ -56,11 +56,11 @@ public class BitBoardState {
         BitBoardStateBuilder bitBoardStateBuilder = new BitBoardStateBuilder();
         bitBoardStateBuilder
                 .enPassantSquare(lastRankAndStateInfo.get(3).equals("-")? -1: getAllSquaresToIndices().get(lastRankAndStateInfo.get(3)))
-                .sideToMove(lastRankAndStateInfo.get(1).equals(new String(new char[]{'w'})) ? SideToMove.WHITE: SideToMove.BLACK)
+                .sideToMove(lastRankAndStateInfo.get(1).equals(new String(new char[]{'w'})) ? Side.WHITE: Side.BLACK)
                 .halfMoveCounter(Integer.parseInt(lastRankAndStateInfo.get(4)))
                 .fullMoveCounter(Integer.parseInt(lastRankAndStateInfo.get(5)));
 
-        Collections.reverse(ranks); // else board is flipped
+//        Collections.reverse(ranks); // not needed
         int counter = 0;
         long tempWhiteOccupancy = 0;
         long tempBlackOccupancy = 0;
@@ -117,12 +117,12 @@ public class BitBoardState {
                 enPassantSquare == that.enPassantSquare &&
                 Arrays.equals(bitBoards, that.bitBoards) &&
                 Arrays.equals(occupancies, that.occupancies) &&
-                currentSide == that.currentSide;
+                SideThatMoved == that.SideThatMoved;
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(whiteOccupancy, blackOccupancy, allOccupancy, allCastlingRights, currentSide, enPassantSquare);
+        int result = Objects.hash(whiteOccupancy, blackOccupancy, allOccupancy, allCastlingRights, SideThatMoved, enPassantSquare);
         result = 31 * result + Arrays.hashCode(bitBoards);
         result = 31 * result + Arrays.hashCode(occupancies);
         return result;
@@ -137,7 +137,7 @@ public class BitBoardState {
         private int allCastlingRights;
         private int halfMoveCounter;
         private int fullMoveCounter;
-        private SideToMove sideToMove;
+        private Side side;
         private int enPassantSquare;
 
         public BitBoardStateBuilder(long[] bitBoards) {
@@ -191,8 +191,8 @@ public class BitBoardState {
             return this;
         }
 
-        public BitBoardStateBuilder sideToMove(SideToMove sideToMove) {
-            this.sideToMove = sideToMove;
+        public BitBoardStateBuilder sideToMove(Side side) {
+            this.side = side;
             return this;
         }
 

@@ -45,10 +45,8 @@ public class BitBoard implements IBoard{
 
         for (int i = 0; i < tempBitBoards.size(); i++) {
             List<Integer> currentIndices = getSquareIndices(tempBitBoards.get(i));
-            System.out.println(currentIndices);
             for (Integer currentIndex : currentIndices) {
                 allSquaresEncoded.set(currentIndex, getUnicodePieces().get(i));
-                System.out.println(getUnicodePieces().get(i));
             }
         }
 

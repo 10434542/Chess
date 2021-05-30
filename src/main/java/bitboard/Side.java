@@ -1,6 +1,6 @@
 package bitboard;
 
-public enum SideToMove {
+public enum Side {
     WHITE,
     BLACK,
     BOTH
