@@ -60,7 +60,7 @@ public class BitBoardState {
                 .halfMoveCounter(Integer.parseInt(lastRankAndStateInfo.get(4)))
                 .fullMoveCounter(Integer.parseInt(lastRankAndStateInfo.get(5)));
 
-//        Collections.reverse(ranks); // not needed
+        Collections.reverse(ranks); // not needed
         int counter = 0;
         long tempWhiteOccupancy = 0;
         long tempBlackOccupancy = 0;

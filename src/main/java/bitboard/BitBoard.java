@@ -3,10 +3,16 @@ package bitboard;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static bitboard.BitBoardState.fenStringToBitBoardState;
 import static bitboard.BitBoardUtils.*;
+import static bitboard.Piece.WHITE_KING;
+import static bitboard.Piece.WHITE_ROOK;
 
 public class BitBoard implements IBoard{
 
@@ -51,14 +57,19 @@ public class BitBoard implements IBoard{
         }
 
         StringBuilder boardString = new StringBuilder();
-        for (int i = 0; i < allSquaresEncoded.size(); i++) {
-            if (i != 0 && i%8==0) {
+        var tempEncodings = Stream.iterate(1, n->n+1).limit(8).map(x -> allSquaresEncoded.subList((x-1)*8,x*8)).collect(Collectors.toList());
+        Collections.reverse(tempEncodings);
+        int sizeEncodings = tempEncodings.size();
+
+        for (int i = 0; i < tempEncodings.size(); i++) {
+            if (i != 0 && i<8) {
                 boardString.append("\n");
             }
-            boardString.append(allSquaresEncoded.get(i));
+            for (String s: tempEncodings.get(i)) {
+                boardString.append(s);
+            }
 
         }
-        // reverse string somewhere here
         return boardString.toString();
     }
 
@@ -90,24 +101,14 @@ public class BitBoard implements IBoard{
 
     }
 
-
-    public BitBoardState getBitBoardState() {
-        return null;
-    }
-
     public static void main(String[] args) {
-        String startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
+        String startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w KQkq - 0 1 ";
         String testAttackSquares = "8/8/4r3/3B4/8/8/8/8 w - - 0-1";
         BitBoard another = new BitBoard(startPosition, new LegalMoveGenerator(new PreCalculatedData()));
+        System.out.println(bitScanForwardDeBruijn64(another.getCurrentState().getBitBoards()[WHITE_KING]));
+        System.out.println(bitScanForwardDeBruijn64(another.getCurrentState().getBitBoards()[WHITE_ROOK]));
+        System.out.println(toBitBoardRepresentation(another.getCurrentState().getWhiteOccupancy()));
         System.out.println(another.toBoardString());
-
-        BitBoard testBoard = new BitBoard(new LegalMoveGenerator(new PreCalculatedData()));
-
-        long start = System.nanoTime();
-        List<Move> generatedMoves = testBoard.getMoveGenerator().generateMoves(testBoard.getCurrentState());
-
-        long end = System.nanoTime();
-        long time = (end-start)/1000000;
-
+        System.out.println(another.moveGenerator.isSquareAttacked(0,0,another.getCurrentState()));
     }
 }

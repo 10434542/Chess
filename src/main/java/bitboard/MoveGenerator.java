@@ -6,4 +6,5 @@ public interface MoveGenerator {
 
     public List<Move> generateMoves(BitBoardState state);
 
+    public boolean isSquareAttacked(int square, int side, BitBoardState state);
 }
