@@ -7,21 +7,20 @@ import java.util.*;
 
 import static bitboard.BitBoardUtils.*;
 
-@Getter
 public class BitBoardState {
     private final long[] bitBoards;
     private final long[] occupancies;
-    private final long whiteOccupancy;
-    private final long blackOccupancy;
-    private final long allOccupancy; // read allPieces
-    private final int allCastlingRights;
-    private final int halfMoveCounter;
-    private final int fullMoveCounter;
-    private final Side SideThatMoved;
-    private final int enPassantSquare;
+    private @Getter final long whiteOccupancy;
+    private @Getter final long blackOccupancy;
+    private @Getter final long allOccupancy; // read allPieces
+    private @Getter final int allCastlingRights;
+    private @Getter final int halfMoveCounter;
+    private @Getter final int fullMoveCounter;
+    private @Getter final Side SideToMove;
+    private @Getter final int enPassantSquare;
 
     public BitBoardState(final long[] bitBoards, final long[] occupancies, final int allCastlingRights,
-                         final Side SideThatMoved, final int enPassantSquare,
+                         final Side SideToMove, final int enPassantSquare,
                          final int halfMoveCounter, final int fullMoveCounter) {
         this.bitBoards = bitBoards;
         this.occupancies = occupancies;
@@ -29,10 +28,23 @@ public class BitBoardState {
         this.blackOccupancy = occupancies[1];
         this.allOccupancy = occupancies[2];
         this.allCastlingRights = allCastlingRights;
-        this.SideThatMoved = SideThatMoved;
+        this.SideToMove = SideToMove;
         this.halfMoveCounter = halfMoveCounter;
         this.fullMoveCounter = fullMoveCounter;
         this.enPassantSquare = enPassantSquare;
+    }
+
+    public BitBoardState(BitBoardState state) {
+        this.bitBoards = state.getBitBoards();
+        this.occupancies = state.getOccupancies();
+        this.whiteOccupancy = state.getOccupancies()[0];
+        this.blackOccupancy = state.getOccupancies()[1];
+        this.allOccupancy = state.getOccupancies()[2];
+        this.allCastlingRights = state.allCastlingRights;
+        this.SideToMove = state.SideToMove;
+        this.halfMoveCounter = state.halfMoveCounter;
+        this.fullMoveCounter = state.fullMoveCounter;
+        this.enPassantSquare = state.enPassantSquare;
     }
 
     private BitBoardState(BitBoardStateBuilder bitBoardStateBuilder) {
@@ -42,11 +54,20 @@ public class BitBoardState {
         this.blackOccupancy = bitBoardStateBuilder.blackOccupancy;
         this.allOccupancy = bitBoardStateBuilder.allOccupancy;
         this.allCastlingRights = bitBoardStateBuilder.allCastlingRights;
-        this.SideThatMoved = bitBoardStateBuilder.side;
+        this.SideToMove = bitBoardStateBuilder.side;
         this.halfMoveCounter = bitBoardStateBuilder.halfMoveCounter;
         this.fullMoveCounter = bitBoardStateBuilder.fullMoveCounter;
         this.enPassantSquare = bitBoardStateBuilder.enPassantSquare;
     }
+
+    public long[] getBitBoards() {
+        return Arrays.copyOf(this.bitBoards, bitBoards.length);
+    }
+
+    public long[] getOccupancies() {
+        return Arrays.copyOf(this.bitBoards, bitBoards.length);
+    }
+
     public static BitBoardState fenStringToBitBoardState(String fen) {
         List<String> splitString = Arrays.asList(fen.split("/"));
         List<String> lastRankAndStateInfo = Arrays.asList(splitString.get(7).split(" "));
@@ -88,7 +109,8 @@ public class BitBoardState {
                 .bitBoards(tempBitBoards) // forgot to put thish here lol
                 .blackOccupancy(tempBlackOccupancy)
                 .whiteOccupancy(tempWhiteOccupancy)
-                .allOccupancy(tempWhiteOccupancy | tempBlackOccupancy);
+                .allOccupancy(tempWhiteOccupancy | tempBlackOccupancy)
+                .occupancies(new long[]{tempWhiteOccupancy, tempBlackOccupancy, tempWhiteOccupancy | tempBlackOccupancy});
 
         for (char c: castlingRight.trim().toCharArray()) {
             if (c == 'K') {
@@ -117,12 +139,12 @@ public class BitBoardState {
                 enPassantSquare == that.enPassantSquare &&
                 Arrays.equals(bitBoards, that.bitBoards) &&
                 Arrays.equals(occupancies, that.occupancies) &&
-                SideThatMoved == that.SideThatMoved;
+                SideToMove == that.SideToMove;
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(whiteOccupancy, blackOccupancy, allOccupancy, allCastlingRights, SideThatMoved, enPassantSquare);
+        int result = Objects.hash(whiteOccupancy, blackOccupancy, allOccupancy, allCastlingRights, SideToMove, enPassantSquare);
         result = 31 * result + Arrays.hashCode(bitBoards);
         result = 31 * result + Arrays.hashCode(occupancies);
         return result;
@@ -148,7 +170,7 @@ public class BitBoardState {
 
         }
 
-        public BitBoardStateBuilder bitBoards(long[] bitBoards) {
+        public BitBoardStateBuilder bitBoards(final long[] bitBoards) {
             this.bitBoards = bitBoards;
             return this;
         }
@@ -198,6 +220,20 @@ public class BitBoardState {
 
         public BitBoardStateBuilder enPassantSquare(int enPassantSquare) {
             this.enPassantSquare = enPassantSquare;
+            return this;
+        }
+
+        public BitBoardStateBuilder of(BitBoardState state) {
+            this.bitBoards = state.bitBoards;
+            this.occupancies = state.occupancies;
+            this.whiteOccupancy = state.occupancies[0];
+            this.blackOccupancy = state.occupancies[1];
+            this.allOccupancy = state.occupancies[2];
+            this.allCastlingRights = state.allCastlingRights;
+            this.side = state.SideToMove;
+            this.halfMoveCounter = state.halfMoveCounter;
+            this.fullMoveCounter = state.fullMoveCounter;
+            this.enPassantSquare = state.enPassantSquare;
             return this;
         }
 

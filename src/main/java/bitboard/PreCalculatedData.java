@@ -1,5 +1,7 @@
 package bitboard;
 
+import java.util.Arrays;
+
 import static bitboard.BitBoardUtils.bitScanForwardDeBruijn64;
 import static bitboard.BitBoardUtils.setBit;
 
@@ -268,15 +270,15 @@ public class PreCalculatedData {
 
     //<editor-fold desc="getters for attacks">
     public long[][] getAllPawnAttacks() {
-        return allPawnAttacks;
+        return Arrays.copyOf(allPawnAttacks, allPawnAttacks.length);
     }
 
     public long[] getAllKnightAttacks() {
-        return allKnightAttacks;
+        return Arrays.copyOf(allKnightAttacks, allKnightAttacks.length);
     }
 
     public long[] getAllKingAttacks() {
-        return allKingAttacks;
+        return Arrays.copyOf(allKingAttacks, allKingAttacks.length);
     }
 
     public long getBishopAttacks(int square, long occupancy) {
@@ -399,7 +401,7 @@ public class PreCalculatedData {
         for (int i = 0; i < 64; i++) {
             attacks[i] = maskKingAttacks(i);
         }
-        return attacks;
+        return Arrays.copyOf(attacks, attacks.length);
     }
 
     //</editor-fold>

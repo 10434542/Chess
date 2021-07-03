@@ -95,7 +95,8 @@ public class BitBoardUtils {
     }
 
     static long setBit(long bitBoard, int square) {
-        return bitBoard | (1L << square) ;
+        long temp = bitBoard;
+        return temp | (1L << square) ;
     }
 
     static long setBits(long bitBoard, int[] squares) {

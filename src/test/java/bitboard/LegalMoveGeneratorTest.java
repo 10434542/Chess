@@ -1,15 +1,23 @@
 package bitboard;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static bitboard.BitBoardUtils.bitScanForwardDeBruijn64;
+import static bitboard.BitBoardUtils.getAllSquaresToIndices;
 import static bitboard.BitBoardState.fenStringToBitBoardState;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static bitboard.Piece.WHITE_KING;
+import static org.junit.jupiter.api.Assertions.*;
 
+/*
+    TODO: add more fenstrings to the tests, specifically to generateMoves.
+     think of moves such as checking yourself when capturing en passant or stuff like that.
 
+ */
 class LegalMoveGeneratorTest {
     LegalMoveGenerator generator;
     PreCalculatedData data;
@@ -22,166 +30,112 @@ class LegalMoveGeneratorTest {
     }
 
 
-    @Test
-    void tryMoveSucceeds() {
+    @ParameterizedTest
+    @CsvSource({
+            "8/8/8/8/8/8/q7/2K5 w - - 0 1, 3"
+    })
+    void tryMoveSucceeds(String fenString, int destinationSquare) {
+        BitBoardState state = fenStringToBitBoardState(fenString);
+        BitBoard bitBoard = new BitBoard(state, generator);
+//        System.out.println(bitBoard.toBoardString());
+//        Move illegaLMove = new Move.MoveBuilder(bitScanForwardDeBruijn64(state.getWhiteOccupancy()), destinationSquare)
+//                .capture(0).pieceType(WHITE_KING).castling(0).setDouble(0).enPassant(0).promoted(0).encodeMove().build();
+        System.out.println("hi");
+        List<Move> generatedMoves = generator.generateMoves(state);
+        System.out.println(generatedMoves);
+        for (Move generatedMove : generatedMoves) {
+            System.out.println(generatedMove.toString());
+        }
+//        generator.generateMoves(state).forEach(System.out::print);
+//        assertTrue(generator.generateMoves(state).contains(illegaLMove));
 
     }
 
-    @Test
-    void tryMoveFails() {
-
+    @ParameterizedTest
+    @CsvSource({
+            "8/8/8/8/8/8/q7/2K5 w - - 0 1, 1"
+    })
+    void tryMoveFails(String fenString, int destinationSquare) {
+        BitBoardState state = fenStringToBitBoardState(fenString);
+        Move illegaLMove = new Move.MoveBuilder(bitScanForwardDeBruijn64(state.getWhiteOccupancy()), destinationSquare)
+                .capture(0).pieceType(WHITE_KING).castling(0).setDouble(0).enPassant(0).promoted(0).encodeMove().build();
+        assertFalse(generator.generateMoves(state).contains(illegaLMove));
     }
 
-    @Test
+    @ParameterizedTest
+    @CsvSource({
+            "8/8/8/7Q/8/8/8/8 w - - 0 1, G5"
+    })
     void isNotInCheck() {
-    }
 
-    @Test
-    void isSquareAttacked() {
-    }
-
-    @Test
-    void generateMoves() {
-    }
-
-    @Test
-    void generatePseudoLegalMoves() {
     }
 
     @ParameterizedTest
     @CsvSource({
-            "8/8/P7/8/8/8/8/8 w - - 0 1, 1",
-            "8/8/p7/8/8/8/8/8 b - - 0 1, 1",
-            "8/pppppppp/8/8/8/8/8/8 b - - 0 1, 16",
-            "8/8/pppppppp/8/8/8/8/8 b - - 0 1, 8",
-            "8/8/8/8/8/8/PPPPPPPP/8 w - - 0 1, 16",
-            "8/8/8/8/8/PPPPPPPP/8/8 w - - 0 1, 8",
-            "8/8/8/8/8/4p3/3P4/8 w - - 0 1, 3"
-
+            "8/8/8/7Q/8/8/8/8 w - - 0 1, G5"
     })
-    void generatePseudoLegalPawnMoves(String fenString, int numberOfMoves) {
+    void isSquareAttacked(String fenString, String square) {
         BitBoardState state = fenStringToBitBoardState(fenString);
-        assertEquals(numberOfMoves, generator.generatePseudoLegalPawnMoves(state).size());
+        boolean actualOutcome = generator.isSquareAttacked(getAllSquaresToIndices().get(square), state.getSideToMove() == Side.WHITE? 0: 1, state);
+        assertTrue(actualOutcome);
     }
 
     @ParameterizedTest
     @CsvSource({
-            "p7/8/8/8/8/8/8/R3K3 w KQkq - 0 1, 2",
-            "r3kbnr/pppppppp/8/8/8/8/PPPPPPPP/R2QK2R b KQkq - 0 1, 1",
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1, 2",
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3KBNR w KQkq - 0 1, 1",
-            "rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w - - 0 1, 0",
-            "rnbqkbnr/8/8/8/8/8/8/RNBQKBNR b - - 0 1, 0",
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w KQkq - 0 1, 20"
     })
-    @DisplayName("Testing pseudo legal castling moves, disregarding the false moves")
-    void generatePseudoLegalCastlingMoves(String fenString, int numberOfMoves) {
+    void generateMoves(String fenString, int numberOfMoves) {
         BitBoardState state = fenStringToBitBoardState(fenString);
-        assertEquals(numberOfMoves, generator.generatePseudoLegalCastlingMoves(state).size());
+        List<Move> outcome = generator.generateMoves(state);
+        assertEquals(numberOfMoves,outcome.size());
     }
 
     @ParameterizedTest
     @CsvSource({
-            "8/8/8/3N4/8/8/8/8 w - - 0 1, 8",
-            "8/8/8/3n4/8/8/8/8 b - - 0 1, 8",
-            "8/8/8/3n4/8/8/8/8 b - - 0 1, 8",
-            "8/8/8/1p6/3N4/1K6/2Q5/8 w - - 0 1, 6",
-            "8/8/8/1K6/NQ6/8/8/8 w - - 0 1, 4",
-            "8/8/8/8/8/8/8/n7 b - - 0 1, 2",
-            "8/8/8/8/8/1K6/2B5/N7 w - - 0 1, 0",
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w KQkq - 0 1"
     })
-    @DisplayName("Testing pseudo legal Knight moves")
-    void generatePseudoLegalKnightMoves(String fenString, int numberOfMoves) {
+    void WhiteToPlayWhenBlackMoved(String fenString) {
         BitBoardState state = fenStringToBitBoardState(fenString);
-        assertEquals(numberOfMoves, generator.generatePseudoLegalKnightMoves(state).size());
+        BitBoard someBoard = new BitBoard(state, generator);
+        System.out.println(someBoard.toBoardString());
+
+        List<Move> outcome = generator.generateMoves(new BitBoardState(state));
+        System.out.println(someBoard.toBoardString());
+        BitBoardState newState = generator.moveToState(outcome.get(0), state);
+        System.out.println(someBoard.toBoardString());
+        someBoard.setCurrentState(newState);
+        System.out.println(someBoard.toBoardString());
+//        System.out.println(someBoard.toBoardString());
+//        System.out.println(newState.getSideToMove());
+        List<Move> outcomeBlack = generator.generateMoves(newState);
+
+
+        assertEquals(newState.getSideToMove(), Side.BLACK);
+        List<Move> outcomeTwo = generator.generateMoves(newState);
+        BitBoardState secondNewState = generator.moveToState(outcomeTwo.get(0), newState);
+        assertEquals(secondNewState.getSideToMove(), Side.WHITE);
+        List<Move> outcomeThree = generator.generateMoves(secondNewState);
+        BitBoardState thirdNewState = generator.moveToState(outcomeThree.get(0), secondNewState);
+        assertEquals(thirdNewState.getSideToMove(), Side.BLACK);
     }
 
     @ParameterizedTest
     @CsvSource({
-            "8/8/8/8/8/3K4/8/8 w - - 0 1, 8",
-            "8/K7/8/8/8/8/8/8 w - - 0 1, 5",
-            "k7/8/8/8/8/8/8/8 b - - 0 1, 3",
-            "8/8/1pkp4/1bKQ4/1rBp/8/8/8 w - - 0 1, 7",
-            "8/8/1PKP4/1Bkq4/1RbP/8/8/8 b - - 0 1, 7",
-            "8/k7/8/8/8/8/8/8 b - - 0 1, 5"
-
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 b KQkq - 0 1"
     })
-    @DisplayName("Testing pseudo legal King moves")
-    void generatePseudoLegalKingMoves(String fenString, int numberOfMoves) {
+    void debugTesting(String fenString) {
         BitBoardState state = fenStringToBitBoardState(fenString);
-        assertEquals(numberOfMoves, generator.generatePseudoLegalKingMoves(state).size());
+        BitBoard someBoard = new BitBoard(state, generator);
+        List<Move> blackMoves = generator.generateMoves(state);
+        BitBoardState newState = generator.moveToState(blackMoves.get(0), state);
+        List<Move> whiteMoves = generator.generateMoves(newState);
+
+        System.out.println(whiteMoves.size());
+        List<Move> bishops = generator.generatePseudoLegalBishopMoves(newState);
+        System.out.println(bishops.size());
+
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "8/8/8/8/8/8/8/B7 w - - 0 1, 7",
-            "8/8/8/8/8/8/8/1B6 w - - 0 1, 7",
-            "8/8/8/8/8/8/3b4/8 b - - 0 1, 9",
-            "8/8/8/8/8/3b4/8/8 b - - 0 1, 11",
-            "8/8/8/8/3b4/8/8/8 b - - 0 1, 13",
-            "8/8/8/2B5/8/8/8/8 w - - 0 1, 11",
-            "8/8/8/8/8/8/8/B7 w - - 0 1, 7",
-            "8/8/8/8/8/3KBr2/8/8 w - - 0 1, 11", // can check yourself when creating pseudo legal move!
-            "8/8/8/8/5r2/3KBr2/8/8 w - - 0 1, 9"
-    })
-    @DisplayName("Testing pseudo legal Bishop moves")
-    void generatePseudoLegalBishopMoves(String fenString, int numberOfMoves) {
-        BitBoardState state = fenStringToBitBoardState(fenString);
-        assertEquals(numberOfMoves, generator.generatePseudoLegalBishopMoves(state).size());
-    }
 
-    @ParameterizedTest
-    @CsvSource({
-            "8/8/8/8/8/8/8/R7 w - - 0 1, 14", // empty board
-            "8/8/8/8/R7/8/8/8 w - - 0 1, 14", // empty board
-            "8/8/8/8/8/2KR1r2/8/8 w - - 0 1, 9", // also counting checking yourself
-            "8/8/8/8/3B4/2KRQ3/3P4/8 w - - 0 1, 0", // cant move
-            "8/8/8/8/3B4/2KRk3/3P4/8 w - - 0 1, 1", // capture king
-            "8/8/8/8/8/8/8/R7 w - - 0 1, 14",
-            "8/8/8/8/8/8/8/R7 w - - 0 1, 14",
-            "8/8/8/8/8/8/8/R7 w - - 0 1, 14",
-            "8/8/8/8/8/8/8/R7 w - - 0 1, 14",
-            "8/8/8/8/8/8/8/r7 b - - 0 1, 14", // empty board
-            "8/8/8/8/r7/8/8/8 b - - 0 1, 14", // empty board
-            "8/8/8/8/8/2kr1R2/8/8 b - - 0 1, 9", // also counting checking yourself
-            "8/8/8/8/3b4/2krq3/3p4/8 b - - 0 1, 0", // cant move
-            "8/8/8/8/3b4/2krK3/3b4/8 b - - 0 1, 1", // capture king
-            "8/8/8/8/8/8/8/r7 b - - 0 1, 14",
-            "8/8/8/8/8/8/8/r7 b - - 0 1, 14",
-            "8/8/8/8/8/8/8/r7 b - - 0 1, 14",
-            "8/8/8/8/8/8/8/r7 b - - 0 1, 14"
-    })
-    @DisplayName("testing pseudo legal rook moves")
-    void generatePseudoLegalRookMoves(String fenString, int numberOfMoves) {
-        BitBoardState state = fenStringToBitBoardState(fenString);
-        assertEquals(numberOfMoves, generator.generatePseudoLegalRookMoves(state).size());
-    }
 
-    @ParameterizedTest
-    @CsvSource({
-            "rnb1kbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1 , 14", // BUG BEFORE: b means b has moved according to bitBoardState, so w needs to move; NOW: fixed b means b needs to move
-            "8/8/8/8/8/7Q/8/8 w KQkq - 0 1 , 21",
-            "8/8/8/8/8/8/1KQ5/8 w - - 0 1, 21",
-            "8/8/8/8/8/1Q6/8/8 w - - 0 1, 23",
-            "8/8/8/8/8/8/1Q6/8 w - - 0 1, 23",
-            "8/8/8/8/1Q6/8/8/8 w - - 0 1, 23",
-            "8/8/8/1Q6/8/8/8/8 w - - 0 1, 23",
-            "8/8/8/2Q5/8/8/8/8 w - - 0 1, 25",
-            "8/8/8/3Q4/8/8/8/8 w - - 0 1, 27",
-            "8/8/8/8/8/8/RK6/QB6 w - - 0 1, 0",
-            "rnbqkbnr/8/8/8/8/8/8/RNBQKBNR b KQkq - 0 1 , 14", // BUG BEFORE: b means b has moved according to bitBoardState, so w needs to move; NOW: fixed b means b needs to move
-            "8/8/8/8/8/7q/8/8 b KQkq - 0 1 , 21",
-            "8/8/8/8/8/8/1kq5/8 b - - 0 1, 21",
-            "8/8/8/8/8/1q6/8/8 b - - 0 1, 23",
-            "8/8/8/8/8/8/1q6/8 b - - 0 1, 23",
-            "8/8/8/8/1q6/8/8/8 b - - 0 1, 23",
-            "8/8/8/1q6/8/8/8/8 b - - 0 1, 23",
-            "8/8/8/2q5/8/8/8/8 b - - 0 1, 25",
-            "8/8/8/3q4/8/8/8/8 b - - 0 1, 27",
-            "8/8/8/8/8/8/rk6/qb6 b - - 0 1, 0"
-    })
-    @DisplayName("testing pseudo legal moves of queen")
-    void generatePseudoLegalQueenMoves(String fenString, int numberOfMoves) {
-        BitBoardState state = fenStringToBitBoardState(fenString);
-        assertEquals(numberOfMoves, generator.generatePseudoLegalQueenMoves(state).size());
-    }
 }

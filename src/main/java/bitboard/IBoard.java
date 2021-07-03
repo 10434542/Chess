@@ -1,12 +1,14 @@
 package bitboard;
 
+import chessengine.IllegalMoveException;
+
 import java.util.List;
 
 public interface IBoard {
 
-    public BitBoardState makeMove();
+    public void makeMove(Move move) throws IllegalMoveException;
 
-    public BitBoardState unMakeMove();
+    public void unMakeMove();
 
     public List<Move> getMoves();
 }
