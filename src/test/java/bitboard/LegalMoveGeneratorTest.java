@@ -37,17 +37,12 @@ class LegalMoveGeneratorTest {
     void tryMoveSucceeds(String fenString, int destinationSquare) {
         BitBoardState state = fenStringToBitBoardState(fenString);
         BitBoard bitBoard = new BitBoard(state, generator);
-//        System.out.println(bitBoard.toBoardString());
-//        Move illegaLMove = new Move.MoveBuilder(bitScanForwardDeBruijn64(state.getWhiteOccupancy()), destinationSquare)
-//                .capture(0).pieceType(WHITE_KING).castling(0).setDouble(0).enPassant(0).promoted(0).encodeMove().build();
         System.out.println("hi");
         List<Move> generatedMoves = generator.generateMoves(state);
         System.out.println(generatedMoves);
         for (Move generatedMove : generatedMoves) {
             System.out.println(generatedMove.toString());
         }
-//        generator.generateMoves(state).forEach(System.out::print);
-//        assertTrue(generator.generateMoves(state).contains(illegaLMove));
 
     }
 
@@ -68,16 +63,6 @@ class LegalMoveGeneratorTest {
     })
     void isNotInCheck() {
 
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "8/8/8/7Q/8/8/8/8 w - - 0 1, G5"
-    })
-    void isSquareAttacked(String fenString, String square) {
-        BitBoardState state = fenStringToBitBoardState(fenString);
-        boolean actualOutcome = generator.isSquareAttacked(getAllSquaresToIndices().get(square), state.getSideToMove() == Side.WHITE? 0: 1, state);
-        assertTrue(actualOutcome);
     }
 
     @ParameterizedTest
@@ -105,8 +90,6 @@ class LegalMoveGeneratorTest {
         System.out.println(someBoard.toBoardString());
         someBoard.setCurrentState(newState);
         System.out.println(someBoard.toBoardString());
-//        System.out.println(someBoard.toBoardString());
-//        System.out.println(newState.getSideToMove());
         List<Move> outcomeBlack = generator.generateMoves(newState);
 
 
@@ -118,24 +101,4 @@ class LegalMoveGeneratorTest {
         BitBoardState thirdNewState = generator.moveToState(outcomeThree.get(0), secondNewState);
         assertEquals(thirdNewState.getSideToMove(), Side.BLACK);
     }
-
-    @ParameterizedTest
-    @CsvSource({
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 b KQkq - 0 1"
-    })
-    void debugTesting(String fenString) {
-        BitBoardState state = fenStringToBitBoardState(fenString);
-        BitBoard someBoard = new BitBoard(state, generator);
-        List<Move> blackMoves = generator.generateMoves(state);
-        BitBoardState newState = generator.moveToState(blackMoves.get(0), state);
-        List<Move> whiteMoves = generator.generateMoves(newState);
-
-        System.out.println(whiteMoves.size());
-        List<Move> bishops = generator.generatePseudoLegalBishopMoves(newState);
-        System.out.println(bishops.size());
-
-    }
-
-
-
 }

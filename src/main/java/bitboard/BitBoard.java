@@ -111,7 +111,9 @@ public class BitBoard implements IBoard{
     }
 
     public static void main(String[] args) {
-        String startPosition = "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1";
+        String startPosition = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1"; // now b7b5 below for black
+//        String startPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; // now b7b5 below for black
+
         String testAttackSquares = "k7/8/8/QK/8/8/8/8 b - - 0 1";
         PreCalculatedData data = new PreCalculatedData();
         String castlingTest = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1 ";
@@ -119,39 +121,37 @@ public class BitBoard implements IBoard{
         LegalMoveGenerator generator = new LegalMoveGenerator(new PreCalculatedData());
         BitBoard castling = new BitBoard(castlingTest, generator);
         BitBoard isCheckedTest = new BitBoard(testAttackSquares,generator);
-//        System.out.println(Arrays.toString(getCastlingSquares()));
-//        generator.generatePseudoLegalCastlingMoves(castling.currentState).forEach(System.out::println);
-//        List<Move> moves = generator.generatePseudoLegalCastlingMoves(castling.currentState);
-//        List<Move> castlingStates = moves.stream()
-//                .filter(move->generator.isNotInCheck(generator.moveToState(move, new BitBoardState.BitBoardStateBuilder().of(castling.currentState).build())))
-//                .collect(Collectors.toList());
-//        for (Move move : moves) {
-//            System.out.println(toBinaryPaddedString(move.getCastling()));
-//        }
-//        castlingStates.forEach(System.out::println);
 
-//        System.out.println(Arrays.toString(getCastlingSquares()));
-        List<Move> initialMoves = generator.generateMoves(another.getCurrentState());
-        List<BitBoardState> firstStates = initialMoves
-                .stream()
-                .map(x -> generator.moveToState(x, another.currentState))
-                .collect(Collectors.toList());
-//        long startTime = System.currentTimeMillis();
-//        generator.perftDriver(2, another.getCurrentState());
-//
-//        long endTime = System.currentTimeMillis();
-//        System.out.println("time\t\t\t" +(endTime-startTime)/1000.00);
+
+        long startTime = System.currentTimeMillis();
+        long[] someMetrics = generator.perftStarter(6, another.getCurrentState());
+
+        long endTime = System.currentTimeMillis();
+        Arrays.stream(someMetrics).forEach(System.out::println);
+        System.out.println("time\t\t\t" +(endTime-startTime)/1000.00);
 //        System.out.println("Nodes:\t\t\t"+perftStart);
 //        System.out.println("Captures:\t\t"+captures);
 //        System.out.println("Castlings:\t\t"+castle);
 //        System.out.println("Checks:\t\t\t"+checks);
 //        System.out.println("NotChecks:\t\t"+notChecks);
 //        System.out.println("En Passants:\t"+enpas);
-        System.out.println("Square\t Number of Moves");
-        for (int i = 0; i < firstStates.size(); i++) {
-            generator.perftDriver(2, firstStates.get(i));
-            System.out.println(initialMoves.get(i)+"\t"+perftStart);
-            perftStart = 0;
-        }
+//        System.out.println("Promotions:\t\t"+promotions);
+
+//        long[] outcome = generator.runPerft(startPosition, 2);
+//        Arrays.stream(outcome).forEach(System.out::println);
+//        List<Move> initialMoves = generator.generateMoves(another.getCurrentState());
+//        initialMoves.forEach(System.out::println);
+//        List<BitBoardState> firstStates = initialMoves
+//                .stream()
+//                .map(x -> generator.moveToState(x, another.currentState))
+//                .collect(Collectors.toList());
+//        System.out.println("Square\t Number of Moves");
+//        for (int i = 0; i < firstStates.size(); i++) {
+//            generator.perftDriver(2, firstStates.get(i));
+//            System.out.println(initialMoves.get(i)+"\t"+perftStart);
+//            perftStart = 0;
+//            List<Move> tempMoves = generator.generateMoves(firstStates.get(i));
+//            tempMoves.stream().filter(x -> x.getSourceSquare()==24).forEach(System.out::println);
+//        }
     }
 }
