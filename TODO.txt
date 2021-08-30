@@ -1,0 +1,3 @@
+TODO list:
+    - create go command for uci
+    - create perft command for uci
